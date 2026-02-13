@@ -1,6 +1,12 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { getRecentActivities } from "@/actions/activities";
+import {
+  getLeadTrendsData,
+  getTicketResolutionData,
+  getConversionFunnelData,
+  getLeadSourcePerformanceData,
+} from "@/actions/dashboard";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/utils";
 import Link from "next/link";
@@ -13,6 +19,11 @@ import {
   Upload,
   Clock,
 } from "lucide-react";
+import { ChartCard } from "@/components/dashboard/chart-card";
+import { LeadTrendsChart } from "@/components/dashboard/lead-trends-chart";
+import { TicketResolutionChart } from "@/components/dashboard/ticket-resolution-chart";
+import { ConversionFunnelChart } from "@/components/dashboard/conversion-funnel-chart";
+import { LeadSourceChart } from "@/components/dashboard/lead-source-chart";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -28,6 +39,10 @@ export default async function DashboardPage() {
     totalTickets,
     newLeadsThisWeek,
     recentActivities,
+    leadTrends,
+    ticketResolution,
+    conversionFunnel,
+    leadSources,
   ] = await Promise.all([
     db.lead.count(),
     db.lead.groupBy({ by: ["status"], _count: true }),
@@ -35,6 +50,10 @@ export default async function DashboardPage() {
     db.ticket.count(),
     db.lead.count({ where: { createdAt: { gte: weekAgo } } }),
     getRecentActivities(15),
+    getLeadTrendsData(30),
+    getTicketResolutionData(),
+    getConversionFunnelData(),
+    getLeadSourcePerformanceData(),
   ]);
 
   const statusCounts: Record<string, number> = {};
@@ -107,6 +126,22 @@ export default async function DashboardPage() {
           </div>
           <p className="text-xs text-gray-500 mt-2">leads added</p>
         </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="Lead Trends (Last 30 Days)">
+          <LeadTrendsChart data={leadTrends} />
+        </ChartCard>
+        <ChartCard title="Ticket Status">
+          <TicketResolutionChart data={ticketResolution} />
+        </ChartCard>
+        <ChartCard title="Conversion Funnel">
+          <ConversionFunnelChart data={conversionFunnel} />
+        </ChartCard>
+        <ChartCard title="Lead Sources">
+          <LeadSourceChart data={leadSources} />
+        </ChartCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

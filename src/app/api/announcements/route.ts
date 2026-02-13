@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { CreateAnnouncementSchema } from "@/lib/validations/announcement";
+import { notifyAnnouncement } from "@/lib/notifications";
 
 export async function GET() {
   const announcements = await db.announcement.findMany({
@@ -31,6 +32,10 @@ export async function POST(request: NextRequest) {
       publishedAt: validated.data.isPublished ? new Date() : null,
     },
   });
+
+  if (announcement.isPublished) {
+    void notifyAnnouncement({ announcementId: announcement.id });
+  }
 
   return NextResponse.json(announcement, { status: 201 });
 }
