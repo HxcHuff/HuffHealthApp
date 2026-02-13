@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+  CLIENT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityType {
+  NOTE
+  STATUS_CHANGE
+  ASSIGNMENT
+  EMAIL
+  CALL
+  TICKET_CREATED
+  TICKET_UPDATED
+  COMMENT
+  LEAD_IMPORTED
+  LEAD_CONVERTED
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  hashedPassword String
+  image          String?
+  role           UserRole  @default(CLIENT)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  assignedLeads   Lead[]          @relation("AssignedLeads")
+  createdLeads    Lead[]          @relation("CreatedLeads")
+  assignedTickets Ticket[]        @relation("AssignedTickets")
+  createdTickets  Ticket[]        @relation("CreatedTickets")
+  clientTickets   Ticket[]        @relation("ClientTickets")
+  ticketComments  TicketComment[]
+  activities      Activity[]      @relation("ActivityPerformer")
+  leadLists       LeadList[]
+  announcements   Announcement[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  company      String?
+  jobTitle     String?
+  source       String?
+  status       LeadStatus @default(NEW)
+  notes        String?    @db.Text
+  customFields Json?
+
+  assignedToId String?
+  assignedTo   User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  createdById  String
+  createdBy    User      @relation("CreatedLeads", fields: [createdById], references: [id])
+  leadListId   String?
+  leadList     LeadList? @relation(fields: [leadListId], references: [id], onDelete: SetNull)
+  contactId    String?   @unique
+  contact      Contact?  @relation(fields: [contactId], references: [id])
+
+  activities Activity[]
+  tickets    Ticket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([leadListId])
+  @@index([email])
+  @@index([createdAt])
+}
+
+model LeadList {
+  id            String  @id @default(cuid())
+  name          String
+  description   String?
+  fileName      String?
+  totalRecords  Int     @default(0)
+  importedCount Int     @default(0)
+  failedCount   Int     @default(0)
+  fieldMapping  Json?
+  source        String?
+
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+  leads        Lead[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([uploadedById])
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String  @unique
+  phone     String?
+  company   String?
+  jobTitle  String?
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  notes     String? @db.Text
+
+  lead Lead?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  subject     String
+  description String         @db.Text
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  reference   String         @unique @default(cuid())
+
+  createdById  String
+  createdBy    User    @relation("CreatedTickets", fields: [createdById], references: [id])
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  clientId     String?
+  client       User?   @relation("ClientTickets", fields: [clientId], references: [id])
+  leadId       String?
+  lead         Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  comments   TicketComment[]
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([clientId])
+  @@index([createdAt])
+}
+
+model TicketComment {
+  id         String  @id @default(cuid())
+  content    String  @db.Text
+  isInternal Boolean @default(false)
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId])
+  @@index([authorId])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  description String       @db.Text
+  metadata    Json?
+
+  performedById String
+  performedBy   User    @relation("ActivityPerformer", fields: [performedById], references: [id])
+  leadId        String?
+  lead          Lead?   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  ticketId      String?
+  ticket        Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@index([ticketId])
+  @@index([performedById])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  content     String    @db.Text
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([publishedAt])
+}
