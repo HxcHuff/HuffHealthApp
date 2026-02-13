@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { CreateTicketSchema, UpdateTicketSchema, CreateCommentSchema } from "@/lib/validations/ticket";
 import { logActivity } from "./activities";
+import { notifyTicketStatusChange, notifyTicketComment } from "@/lib/notifications";
 
 export async function createTicket(formData: FormData) {
   const session = await auth();
@@ -70,6 +71,12 @@ export async function updateTicket(id: string, data: Record<string, unknown>) {
       ticketId: id,
       metadata: { oldStatus: existing.status, newStatus: validated.data.status },
     });
+    void notifyTicketStatusChange({
+      ticketId: id,
+      oldStatus: existing.status,
+      newStatus: validated.data.status,
+      updatedById: session.user.id,
+    });
   }
 
   revalidatePath("/tickets");
@@ -103,7 +110,7 @@ export async function addComment(ticketId: string, formData: FormData) {
     }
   }
 
-  await db.ticketComment.create({
+  const comment = await db.ticketComment.create({
     data: {
       content: validated.data.content,
       isInternal,
@@ -116,6 +123,13 @@ export async function addComment(ticketId: string, formData: FormData) {
     type: "COMMENT",
     description: `Added ${isInternal ? "internal " : ""}comment on ticket`,
     ticketId,
+  });
+
+  void notifyTicketComment({
+    ticketId,
+    commentId: comment.id,
+    authorId: session.user.id,
+    isInternal,
   });
 
   revalidatePath(`/tickets/${ticketId}`);

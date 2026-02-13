@@ -36,3 +36,21 @@ export const LEAD_SOURCE_OPTIONS = [
   "Manual Entry",
   "Other",
 ] as const;
+
+export const CHART_COLORS = {
+  lead: {
+    NEW: "#3b82f6",
+    CONTACTED: "#eab308",
+    QUALIFIED: "#a855f7",
+    CONVERTED: "#22c55e",
+    LOST: "#ef4444",
+  },
+  ticket: {
+    OPEN: "#3b82f6",
+    IN_PROGRESS: "#eab308",
+    RESOLVED: "#22c55e",
+    CLOSED: "#6b7280",
+  },
+  primary: "#2563eb",
+  primaryLight: "#93c5fd",
+} as const;

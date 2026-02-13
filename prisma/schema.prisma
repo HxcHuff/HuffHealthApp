@@ -46,6 +46,7 @@ enum ActivityType {
   COMMENT
   LEAD_IMPORTED
   LEAD_CONVERTED
+  FACEBOOK_SYNC
 }
 
 model User {
@@ -55,9 +56,10 @@ model User {
   hashedPassword String
   image          String?
   role           UserRole  @default(CLIENT)
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  isActive                Boolean   @default(true)
+  notificationPreferences Json?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   assignedLeads   Lead[]          @relation("AssignedLeads")
   createdLeads    Lead[]          @relation("CreatedLeads")
@@ -66,8 +68,9 @@ model User {
   clientTickets   Ticket[]        @relation("ClientTickets")
   ticketComments  TicketComment[]
   activities      Activity[]      @relation("ActivityPerformer")
-  leadLists       LeadList[]
-  announcements   Announcement[]
+  leadLists              LeadList[]
+  announcements          Announcement[]
+  facebookIntegrations   FacebookIntegration[]
 
   @@index([email])
   @@index([role])
@@ -234,4 +237,23 @@ model Announcement {
 
   @@index([isPublished])
   @@index([publishedAt])
+}
+
+model FacebookIntegration {
+  id          String    @id @default(cuid())
+  pageId      String    @unique
+  pageName    String
+  accessToken String    @db.Text
+  formIds     String[]
+  isActive    Boolean   @default(true)
+  lastSyncAt  DateTime?
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+  @@index([isActive])
 }

@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { CreateLeadSchema, UpdateLeadSchema } from "@/lib/validations/lead";
 import { logActivity } from "./activities";
+import { notifyLeadAssignment } from "@/lib/notifications";
 
 export async function createLead(formData: FormData) {
   const session = await auth();
@@ -80,6 +81,11 @@ export async function updateLead(id: string, data: Record<string, unknown>) {
       type: "ASSIGNMENT",
       description: `Lead assigned to a new team member`,
       leadId: id,
+    });
+    void notifyLeadAssignment({
+      leadId: id,
+      assignedToId: validated.data.assignedToId,
+      assignedById: session.user.id,
     });
   }
 
