@@ -53,6 +53,17 @@ export async function POST(request: NextRequest) {
       jobTitle?: string;
       source?: string;
       notes?: string;
+      disputeStatus?: string;
+      externalLeadId?: string;
+      orderId?: string;
+      received?: string;
+      fund?: string;
+      dateOfBirth?: string;
+      address?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+      price?: string;
       customFields?: object;
       createdById: string;
       leadListId: string;
@@ -106,6 +117,17 @@ export async function POST(request: NextRequest) {
         jobTitle: lead.jobTitle || undefined,
         source: lead.source || source || undefined,
         notes: lead.notes || undefined,
+        disputeStatus: lead.disputeStatus || undefined,
+        externalLeadId: lead.externalLeadId || undefined,
+        orderId: lead.orderId || undefined,
+        received: lead.received || undefined,
+        fund: lead.fund || undefined,
+        dateOfBirth: lead.dateOfBirth || undefined,
+        address: lead.address || undefined,
+        city: lead.city || undefined,
+        state: lead.state || undefined,
+        zipCode: lead.zipCode || undefined,
+        price: lead.price || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         createdById: session.user.id,
         leadListId: leadList.id,
@@ -119,17 +141,19 @@ export async function POST(request: NextRequest) {
           skipDuplicates: true,
         });
         result.successCount += created.count;
-      } catch {
+      } catch (batchError) {
+        console.error("Batch insert failed:", batchError);
         // Fall back to individual inserts on batch failure
         for (const leadData of leadsToCreate) {
           try {
             await db.lead.create({ data: leadData });
             result.successCount++;
-          } catch {
+          } catch (individualError) {
+            console.error("Individual insert failed:", individualError);
             result.failedCount++;
             result.errors.push({
               row: 0,
-              error: `Failed to import ${leadData.firstName} ${leadData.lastName}`,
+              error: `Failed to import ${leadData.firstName} ${leadData.lastName}: ${individualError instanceof Error ? individualError.message : "Unknown error"}`,
             });
           }
         }

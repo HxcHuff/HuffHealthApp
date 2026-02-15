@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { updateLead, deleteLead } from "@/actions/leads";
+import { logActivity } from "@/actions/activities";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import {
   ArrowLeft,
   Mail,
   Phone,
+  PhoneCall,
+  MessageSquare,
   Building2,
   Briefcase,
   Trash2,
   Clock,
+  X,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -45,6 +49,12 @@ interface LeadDetailProps {
 export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [showTextModal, setShowTextModal] = useState(false);
+  const [callNotes, setCallNotes] = useState("");
+  const [callDuration, setCallDuration] = useState("");
+  const [textMessage, setTextMessage] = useState("");
+  const smsLinkRef = useRef<HTMLAnchorElement>(null);
 
   async function handleStatusChange(status: string) {
     setUpdating(true);
@@ -64,6 +74,58 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
     if (!confirm("Are you sure you want to delete this lead?")) return;
     await deleteLead(lead.id);
     router.push("/leads");
+  }
+
+  async function handleCall() {
+    await logActivity({
+      type: "CALL",
+      description: `Called ${lead.firstName} ${lead.lastName} at ${lead.phone}`,
+      leadId: lead.id,
+      metadata: { phone: lead.phone },
+    });
+    router.refresh();
+    setShowCallModal(true);
+  }
+
+  async function handleSaveCallNotes() {
+    if (callNotes.trim() || callDuration.trim()) {
+      await logActivity({
+        type: "NOTE",
+        description: `Call notes for ${lead.firstName} ${lead.lastName}${callDuration ? ` (${callDuration} min)` : ""}: ${callNotes || "No notes"}`,
+        leadId: lead.id,
+        metadata: {
+          phone: lead.phone,
+          duration: callDuration || null,
+          notes: callNotes || null,
+        },
+      });
+    }
+    setCallNotes("");
+    setCallDuration("");
+    setShowCallModal(false);
+    router.refresh();
+  }
+
+  async function handleSendText() {
+    if (!textMessage.trim()) return;
+    await logActivity({
+      type: "CALL",
+      description: `Sent text to ${lead.firstName} ${lead.lastName} at ${lead.phone}: "${textMessage}"`,
+      leadId: lead.id,
+      metadata: {
+        phone: lead.phone,
+        message: textMessage,
+        type: "sms",
+      },
+    });
+    router.refresh();
+    // Open native SMS app with pre-filled message
+    if (smsLinkRef.current) {
+      smsLinkRef.current.href = `sms:${lead.phone}?&body=${encodeURIComponent(textMessage)}`;
+      smsLinkRef.current.click();
+    }
+    setTextMessage("");
+    setShowTextModal(false);
   }
 
   return (
@@ -100,7 +162,7 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
               {lead.email && (
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{lead.email}</span>
+                  <a href={`mailto:${lead.email}`} className="text-blue-600 hover:underline">{lead.email}</a>
                 </div>
               )}
               {lead.phone && (
@@ -122,6 +184,28 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
                 </div>
               )}
             </div>
+
+            {lead.phone && (
+              <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
+                <a
+                  href={`tel:${lead.phone}`}
+                  onClick={handleCall}
+                  className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                >
+                  <PhoneCall className="h-4 w-4" />
+                  Call
+                </a>
+                <button
+                  onClick={() => setShowTextModal(true)}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Text
+                </button>
+                <a ref={smsLinkRef} className="hidden" />
+              </div>
+            )}
+
             {lead.notes && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-sm font-medium text-gray-700 mb-1">Notes</p>
@@ -212,6 +296,109 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
           </div>
         </div>
       </div>
+
+      {/* Call Notes Modal */}
+      {showCallModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Log Call Notes</h3>
+              <button
+                onClick={() => { setShowCallModal(false); setCallNotes(""); setCallDuration(""); }}
+                className="rounded-lg p-1 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Call to {lead.firstName} {lead.lastName} at {lead.phone}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration (minutes)
+                </label>
+                <input
+                  type="text"
+                  value={callDuration}
+                  onChange={(e) => setCallDuration(e.target.value)}
+                  placeholder="e.g. 5"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <textarea
+                  value={callNotes}
+                  onChange={(e) => setCallNotes(e.target.value)}
+                  rows={4}
+                  placeholder="What was discussed..."
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowCallModal(false); setCallNotes(""); setCallDuration(""); }}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleSaveCallNotes}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                Save Notes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compose Text Modal */}
+      {showTextModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Send Text</h3>
+              <button
+                onClick={() => { setShowTextModal(false); setTextMessage(""); }}
+                className="rounded-lg p-1 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              To: {lead.firstName} {lead.lastName} ({lead.phone})
+            </p>
+            <textarea
+              value={textMessage}
+              onChange={(e) => setTextMessage(e.target.value)}
+              rows={4}
+              placeholder="Type your message..."
+              autoFocus
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowTextModal(false); setTextMessage(""); }}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendText}
+                disabled={!textMessage.trim()}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                Send & Open SMS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

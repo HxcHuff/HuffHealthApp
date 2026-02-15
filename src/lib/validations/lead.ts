@@ -10,6 +10,17 @@ export const CreateLeadSchema = z.object({
   source: z.string().optional(),
   notes: z.string().optional(),
   assignedToId: z.string().optional(),
+  disputeStatus: z.string().optional(),
+  externalLeadId: z.string().optional(),
+  orderId: z.string().optional(),
+  received: z.string().optional(),
+  fund: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  price: z.string().optional(),
 });
 
 export const UpdateLeadSchema = z.object({
@@ -23,6 +34,17 @@ export const UpdateLeadSchema = z.object({
   notes: z.string().optional(),
   status: z.enum(["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"]).optional(),
   assignedToId: z.string().optional().nullable(),
+  disputeStatus: z.string().optional(),
+  externalLeadId: z.string().optional(),
+  orderId: z.string().optional(),
+  received: z.string().optional(),
+  fund: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  price: z.string().optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof CreateLeadSchema>;

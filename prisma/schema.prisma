@@ -77,17 +77,28 @@ model User {
 }
 
 model Lead {
-  id           String     @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String?
-  phone        String?
-  company      String?
-  jobTitle     String?
-  source       String?
-  status       LeadStatus @default(NEW)
-  notes        String?    @db.Text
-  customFields Json?
+  id             String     @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  company        String?
+  jobTitle       String?
+  source         String?
+  status         LeadStatus @default(NEW)
+  notes          String?    @db.Text
+  customFields   Json?
+  disputeStatus  String?
+  externalLeadId String?
+  orderId        String?
+  received       String?
+  fund           String?
+  dateOfBirth    String?
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  price          String?
 
   assignedToId String?
   assignedTo   User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
