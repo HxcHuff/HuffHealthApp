@@ -46,6 +46,26 @@ async function main() {
     },
   });
 
+  // Create lead sources
+  const sourceNames = [
+    "Facebook Lead Ad",
+    "Website",
+    "Referral",
+    "Cold Call",
+    "Email Campaign",
+    "CSV Import",
+    "Manual Entry",
+    "Other",
+  ];
+  for (const name of sourceNames) {
+    await prisma.leadSource.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+  console.log("Lead sources seeded.");
+
   // Create sample leads
   const leadData = [
     { firstName: "John", lastName: "Smith", email: "john@example.com", phone: "555-0101", company: "Acme Corp", source: "Facebook Lead Ad", status: "NEW_LEAD" as const },
