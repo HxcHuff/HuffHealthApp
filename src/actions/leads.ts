@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { CreateLeadSchema, UpdateLeadSchema } from "@/lib/validations/lead";
 import { logActivity } from "./activities";
 import { notifyLeadAssignment } from "@/lib/notifications";
+import { syncToDripEngine } from "@/lib/drip-engine";
 
 export async function createLead(formData: FormData) {
   const session = await auth();
@@ -43,6 +44,19 @@ export async function createLead(formData: FormData) {
     description: `Created lead: ${lead.firstName} ${lead.lastName}`,
     leadId: lead.id,
   });
+
+  // Sync to drip engine (non-blocking)
+  if (lead.email) {
+    void syncToDripEngine({
+      first_name: lead.firstName,
+      last_name: lead.lastName,
+      email: lead.email,
+      phone: lead.phone || undefined,
+      zip_code: lead.zipCode || undefined,
+      lead_source: lead.source || undefined,
+      crm_lead_id: lead.id,
+    });
+  }
 
   revalidatePath("/leads");
   return { success: true, id: lead.id };

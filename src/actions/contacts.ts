@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { CreateContactSchema, UpdateContactSchema } from "@/lib/validations/contact";
 import { logActivity } from "./activities";
+import { syncToDripEngine } from "@/lib/drip-engine";
 
 export async function createContact(formData: FormData) {
   const session = await auth();
@@ -39,6 +40,16 @@ export async function createContact(formData: FormData) {
     type: "NOTE",
     description: `Created contact: ${contact.firstName} ${contact.lastName}`,
     contactId: contact.id,
+  });
+
+  // Sync to drip engine (non-blocking)
+  void syncToDripEngine({
+    first_name: contact.firstName,
+    last_name: contact.lastName,
+    email: contact.email,
+    phone: contact.phone || undefined,
+    zip_code: contact.zipCode || undefined,
+    crm_contact_id: contact.id,
   });
 
   revalidatePath("/contacts");

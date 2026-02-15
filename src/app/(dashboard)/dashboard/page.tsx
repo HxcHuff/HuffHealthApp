@@ -18,6 +18,7 @@ import {
   Plus,
   Upload,
   Clock,
+  Zap,
 } from "lucide-react";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { LeadTrendsChart } from "@/components/dashboard/lead-trends-chart";
@@ -257,6 +258,22 @@ export default async function DashboardPage() {
               <p className="text-xs text-gray-500">Open a support ticket</p>
             </div>
           </Link>
+          {process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (
+            <a
+              href={process.env.NEXT_PUBLIC_DRIP_ENGINE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100">
+                <Zap className="h-4 w-4 text-cyan-700" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Drip Campaigns</p>
+                <p className="text-xs text-gray-500">Manage automated messaging</p>
+              </div>
+            </a>
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,8 @@ import {
   Settings,
   Upload,
   Kanban,
+  Zap,
+  ExternalLink,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -72,6 +74,20 @@ export function Sidebar({ role }: SidebarProps) {
               </li>
             );
           })}
+          {process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (
+            <li>
+              <a
+                href={process.env.NEXT_PUBLIC_DRIP_ENGINE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              >
+                <Zap className="h-5 w-5 flex-shrink-0" />
+                Drip Engine
+                <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
+              </a>
+            </li>
+          )}
         </ul>
       </nav>
     </aside>
