@@ -75,7 +75,7 @@ export default async function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <Link href="/leads" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500">Total Leads</p>
@@ -86,9 +86,9 @@ export default async function DashboardPage() {
             </div>
           </div>
           <p className="text-xs text-green-600 mt-2">+{newLeadsThisWeek} this week</p>
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <Link href="/leads?status=ENROLLED" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500">Enrollment Rate</p>
@@ -99,9 +99,9 @@ export default async function DashboardPage() {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-2">{enrolledCount} enrolled</p>
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <Link href="/tickets" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500">Open Tickets</p>
@@ -112,9 +112,9 @@ export default async function DashboardPage() {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-2">{totalTickets} total</p>
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <Link href="/leads" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500">New This Week</p>
@@ -125,21 +125,21 @@ export default async function DashboardPage() {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-2">leads added</p>
-        </div>
+        </Link>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Lead Trends (Last 30 Days)">
+        <ChartCard title="Lead Trends (Last 30 Days)" href="/leads">
           <LeadTrendsChart data={leadTrends} />
         </ChartCard>
-        <ChartCard title="Ticket Status">
+        <ChartCard title="Ticket Status" href="/tickets">
           <TicketResolutionChart data={ticketResolution} />
         </ChartCard>
-        <ChartCard title="Conversion Funnel">
+        <ChartCard title="Conversion Funnel" href="/leads/pipeline">
           <ConversionFunnelChart data={conversionFunnel} />
         </ChartCard>
-        <ChartCard title="Lead Sources">
+        <ChartCard title="Lead Sources" href="/settings/sources">
           <LeadSourceChart data={leadSources} />
         </ChartCard>
       </div>
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
               const count = statusCounts[status.value] || 0;
               const pct = totalLeads > 0 ? (count / totalLeads) * 100 : 0;
               return (
-                <div key={status.value}>
+                <Link key={status.value} href={`/leads?status=${status.value}`} className="block hover:bg-gray-50 -mx-2 px-2 py-1 rounded-lg transition-colors">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-gray-600">{status.label}</span>
                     <span className="text-xs text-gray-500">{count}</span>
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -177,7 +177,12 @@ export default async function DashboardPage() {
 
         {/* Recent Activity */}
         <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-gray-900">Recent Activity</h2>
+            <Link href="/leads" className="text-xs text-blue-600 hover:underline">
+              View all leads
+            </Link>
+          </div>
           {recentActivities.length > 0 ? (
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {recentActivities.map((activity) => (
