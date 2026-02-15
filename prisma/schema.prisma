@@ -14,10 +14,11 @@ enum UserRole {
 }
 
 enum LeadStatus {
-  NEW
+  NEW_LEAD
   CONTACTED
-  QUALIFIED
-  CONVERTED
+  QUOTED
+  APPLICATION_SENT
+  ENROLLED
   LOST
 }
 
@@ -85,7 +86,8 @@ model Lead {
   company        String?
   jobTitle       String?
   source         String?
-  status         LeadStatus @default(NEW)
+  status         LeadStatus @default(NEW_LEAD)
+  stageEnteredAt DateTime   @default(now())
   notes          String?    @db.Text
   customFields   Json?
   disputeStatus  String?
@@ -157,7 +159,8 @@ model Contact {
   zipCode   String?
   notes     String? @db.Text
 
-  lead Lead?
+  lead       Lead?
+  activities Activity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -224,11 +227,14 @@ model Activity {
   lead          Lead?   @relation(fields: [leadId], references: [id], onDelete: Cascade)
   ticketId      String?
   ticket        Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  contactId     String?
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@index([leadId])
   @@index([ticketId])
+  @@index([contactId])
   @@index([performedById])
   @@index([createdAt])
 }

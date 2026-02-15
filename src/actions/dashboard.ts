@@ -65,12 +65,13 @@ export async function getConversionFunnelData() {
     statusMap[item.status] = item._count;
   }
 
-  const funnelOrder = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED"] as const;
+  const funnelOrder = ["NEW_LEAD", "CONTACTED", "QUOTED", "APPLICATION_SENT", "ENROLLED"] as const;
   const labels: Record<string, string> = {
-    NEW: "New",
+    NEW_LEAD: "New Lead",
     CONTACTED: "Contacted",
-    QUALIFIED: "Qualified",
-    CONVERTED: "Converted",
+    QUOTED: "Quoted",
+    APPLICATION_SENT: "Application Sent",
+    ENROLLED: "Enrolled",
   };
 
   return funnelOrder.map((status) => ({

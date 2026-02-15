@@ -61,8 +61,8 @@ export default async function DashboardPage() {
     statusCounts[item.status] = item._count;
   }
 
-  const convertedCount = statusCounts["CONVERTED"] || 0;
-  const conversionRate = totalLeads > 0 ? ((convertedCount / totalLeads) * 100).toFixed(1) : "0";
+  const enrolledCount = statusCounts["ENROLLED"] || 0;
+  const conversionRate = totalLeads > 0 ? ((enrolledCount / totalLeads) * 100).toFixed(1) : "0";
 
   return (
     <div className="space-y-6">
@@ -91,14 +91,14 @@ export default async function DashboardPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500">Conversion Rate</p>
+              <p className="text-xs font-medium text-gray-500">Enrollment Rate</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{conversionRate}%</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
               <TrendingUp className="h-5 w-5 text-green-600" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">{convertedCount} converted</p>
+          <p className="text-xs text-gray-500 mt-2">{enrolledCount} enrolled</p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5">

@@ -3,8 +3,15 @@ import { LeadPipeline } from "@/components/leads/lead-pipeline";
 
 export default async function PipelinePage() {
   const leads = await db.lead.findMany({
-    include: {
-      assignedTo: { select: { id: true, name: true, image: true } },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      zipCode: true,
+      source: true,
+      status: true,
+      stageEnteredAt: true,
     },
     orderBy: { updatedAt: "desc" },
   });

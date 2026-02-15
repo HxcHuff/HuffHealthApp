@@ -1,8 +1,9 @@
 export const LEAD_STATUS_OPTIONS = [
-  { value: "NEW", label: "New", color: "bg-blue-100 text-blue-800" },
+  { value: "NEW_LEAD", label: "New Lead", color: "bg-blue-100 text-blue-800" },
   { value: "CONTACTED", label: "Contacted", color: "bg-yellow-100 text-yellow-800" },
-  { value: "QUALIFIED", label: "Qualified", color: "bg-purple-100 text-purple-800" },
-  { value: "CONVERTED", label: "Converted", color: "bg-green-100 text-green-800" },
+  { value: "QUOTED", label: "Quoted", color: "bg-purple-100 text-purple-800" },
+  { value: "APPLICATION_SENT", label: "Application Sent", color: "bg-indigo-100 text-indigo-800" },
+  { value: "ENROLLED", label: "Enrolled", color: "bg-green-100 text-green-800" },
   { value: "LOST", label: "Lost", color: "bg-red-100 text-red-800" },
 ] as const;
 
@@ -39,10 +40,11 @@ export const LEAD_SOURCE_OPTIONS = [
 
 export const CHART_COLORS = {
   lead: {
-    NEW: "#3b82f6",
+    NEW_LEAD: "#3b82f6",
     CONTACTED: "#eab308",
-    QUALIFIED: "#a855f7",
-    CONVERTED: "#22c55e",
+    QUOTED: "#a855f7",
+    APPLICATION_SENT: "#6366f1",
+    ENROLLED: "#22c55e",
     LOST: "#ef4444",
   },
   ticket: {

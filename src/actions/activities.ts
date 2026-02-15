@@ -9,12 +9,14 @@ export async function logActivity({
   description,
   leadId,
   ticketId,
+  contactId,
   metadata,
 }: {
   type: ActivityType;
   description: string;
   leadId?: string;
   ticketId?: string;
+  contactId?: string;
   metadata?: Record<string, unknown>;
 }) {
   const session = await auth();
@@ -27,6 +29,7 @@ export async function logActivity({
       performedById: session.user.id,
       leadId,
       ticketId,
+      contactId,
       metadata: metadata ? (metadata as object) : undefined,
     },
   });

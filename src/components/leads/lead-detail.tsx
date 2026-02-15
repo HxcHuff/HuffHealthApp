@@ -17,6 +17,12 @@ import {
   Trash2,
   Clock,
   X,
+  MapPin,
+  Calendar,
+  DollarSign,
+  Hash,
+  FileText,
+  AlertCircle,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -31,6 +37,17 @@ interface LeadDetailProps {
     source: string | null;
     status: string;
     notes: string | null;
+    disputeStatus: string | null;
+    externalLeadId: string | null;
+    orderId: string | null;
+    received: string | null;
+    fund: string | null;
+    dateOfBirth: string | null;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    zipCode: string | null;
+    price: string | null;
     createdAt: string | Date;
     updatedAt: string | Date;
     assignedTo: { id: string; name: string } | null;
@@ -185,24 +202,89 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
               )}
             </div>
 
-            {lead.phone && (
-              <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
-                <a
-                  href={`tel:${lead.phone}`}
-                  onClick={handleCall}
-                  className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
-                >
-                  <PhoneCall className="h-4 w-4" />
-                  Call
-                </a>
-                <button
-                  onClick={() => setShowTextModal(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Text
-                </button>
-                <a ref={smsLinkRef} className="hidden" />
+            {(lead.phone || lead.email) && (
+              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
+                {lead.phone && (
+                  <>
+                    <a
+                      href={`tel:${lead.phone}`}
+                      onClick={handleCall}
+                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                    >
+                      <PhoneCall className="h-4 w-4" />
+                      Call
+                    </a>
+                    <button
+                      onClick={() => setShowTextModal(true)}
+                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Text
+                    </button>
+                    <a ref={smsLinkRef} className="hidden" />
+                  </>
+                )}
+                {lead.email && (
+                  <a
+                    href={`mailto:${lead.email}`}
+                    className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </a>
+                )}
+              </div>
+            )}
+
+            {(lead.address || lead.city || lead.state || lead.zipCode) && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-start gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                  <span className="text-gray-600">
+                    {[lead.address, lead.city, lead.state, lead.zipCode].filter(Boolean).join(", ")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {(lead.dateOfBirth || lead.fund || lead.price || lead.orderId || lead.externalLeadId || lead.disputeStatus) && (
+              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {lead.dateOfBirth && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">DOB: {lead.dateOfBirth}</span>
+                  </div>
+                )}
+                {lead.fund && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileText className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">{lead.fund}</span>
+                  </div>
+                )}
+                {lead.price && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">${lead.price}</span>
+                  </div>
+                )}
+                {lead.orderId && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Hash className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Order: {lead.orderId}</span>
+                  </div>
+                )}
+                {lead.externalLeadId && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Hash className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Lead ID: {lead.externalLeadId}</span>
+                  </div>
+                )}
+                {lead.disputeStatus && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    <span className="text-gray-600">Dispute: {lead.disputeStatus}</span>
+                  </div>
+                )}
               </div>
             )}
 

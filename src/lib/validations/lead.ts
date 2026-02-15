@@ -32,7 +32,7 @@ export const UpdateLeadSchema = z.object({
   jobTitle: z.string().optional(),
   source: z.string().optional(),
   notes: z.string().optional(),
-  status: z.enum(["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"]).optional(),
+  status: z.enum(["NEW_LEAD", "CONTACTED", "QUOTED", "APPLICATION_SENT", "ENROLLED", "LOST"]).optional(),
   assignedToId: z.string().optional().nullable(),
   disputeStatus: z.string().optional(),
   externalLeadId: z.string().optional(),

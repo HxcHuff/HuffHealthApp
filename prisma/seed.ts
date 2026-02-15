@@ -48,15 +48,15 @@ async function main() {
 
   // Create sample leads
   const leadData = [
-    { firstName: "John", lastName: "Smith", email: "john@example.com", phone: "555-0101", company: "Acme Corp", source: "Facebook Lead Ad", status: "NEW" as const },
+    { firstName: "John", lastName: "Smith", email: "john@example.com", phone: "555-0101", company: "Acme Corp", source: "Facebook Lead Ad", status: "NEW_LEAD" as const },
     { firstName: "Sarah", lastName: "Johnson", email: "sarah@example.com", phone: "555-0102", company: "TechStart Inc", source: "Website", status: "CONTACTED" as const },
-    { firstName: "Mike", lastName: "Williams", email: "mike@example.com", phone: "555-0103", company: "Health Plus", source: "Referral", status: "QUALIFIED" as const },
-    { firstName: "Emily", lastName: "Brown", email: "emily@example.com", phone: "555-0104", company: "Wellness Co", source: "Facebook Lead Ad", status: "NEW" as const },
+    { firstName: "Mike", lastName: "Williams", email: "mike@example.com", phone: "555-0103", company: "Health Plus", source: "Referral", status: "QUOTED" as const },
+    { firstName: "Emily", lastName: "Brown", email: "emily@example.com", phone: "555-0104", company: "Wellness Co", source: "Facebook Lead Ad", status: "NEW_LEAD" as const },
     { firstName: "David", lastName: "Jones", email: "david@example.com", phone: "555-0105", company: "FitLife LLC", source: "CSV Import", status: "CONTACTED" as const },
-    { firstName: "Lisa", lastName: "Davis", email: "lisa@example.com", phone: "555-0106", company: "Care Solutions", source: "Cold Call", status: "CONVERTED" as const },
+    { firstName: "Lisa", lastName: "Davis", email: "lisa@example.com", phone: "555-0106", company: "Care Solutions", source: "Cold Call", status: "ENROLLED" as const },
     { firstName: "Robert", lastName: "Miller", email: "robert@example.com", phone: "555-0107", company: "MedTech", source: "Email Campaign", status: "LOST" as const },
-    { firstName: "Jennifer", lastName: "Wilson", email: "jennifer@example.com", phone: "555-0108", company: "HealthFirst", source: "Facebook Lead Ad", status: "NEW" as const },
-    { firstName: "Chris", lastName: "Moore", email: "chris@example.com", phone: "555-0109", company: "Vitality Inc", source: "Website", status: "QUALIFIED" as const },
+    { firstName: "Jennifer", lastName: "Wilson", email: "jennifer@example.com", phone: "555-0108", company: "HealthFirst", source: "Facebook Lead Ad", status: "APPLICATION_SENT" as const },
+    { firstName: "Chris", lastName: "Moore", email: "chris@example.com", phone: "555-0109", company: "Vitality Inc", source: "Website", status: "QUOTED" as const },
     { firstName: "Amanda", lastName: "Taylor", email: "amanda@example.com", phone: "555-0110", company: "WellBeing Co", source: "Referral", status: "CONTACTED" as const },
   ];
 

@@ -62,9 +62,14 @@ export async function updateLead(id: string, data: Record<string, unknown>) {
   const existingLead = await db.lead.findUnique({ where: { id } });
   if (!existingLead) return { error: "Lead not found" };
 
+  const updateData = { ...validated.data };
+  if (updateData.status && updateData.status !== existingLead.status) {
+    (updateData as Record<string, unknown>).stageEnteredAt = new Date();
+  }
+
   const lead = await db.lead.update({
     where: { id },
-    data: validated.data,
+    data: updateData,
   });
 
   if (validated.data.status && validated.data.status !== existingLead.status) {
