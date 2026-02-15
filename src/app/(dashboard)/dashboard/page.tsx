@@ -14,7 +14,7 @@ import {
   Target,
   TrendingUp,
   Ticket,
-  Users,
+  ContactRound,
   Plus,
   Upload,
   Clock,
@@ -29,15 +29,12 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session) return null;
 
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
   const [
     totalLeads,
     leadsByStatus,
     openTickets,
     totalTickets,
-    newLeadsThisWeek,
+    totalContacts,
     recentActivities,
     leadTrends,
     ticketResolution,
@@ -48,7 +45,7 @@ export default async function DashboardPage() {
     db.lead.groupBy({ by: ["status"], _count: true }),
     db.ticket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
     db.ticket.count(),
-    db.lead.count({ where: { createdAt: { gte: weekAgo } } }),
+    db.contact.count(),
     getRecentActivities(15),
     getLeadTrendsData(30),
     getTicketResolutionData(),
@@ -85,7 +82,7 @@ export default async function DashboardPage() {
               <Target className="h-5 w-5 text-blue-600" />
             </div>
           </div>
-          <p className="text-xs text-green-600 mt-2">+{newLeadsThisWeek} this week</p>
+          <p className="text-xs text-gray-500 mt-2">in pipeline</p>
         </Link>
 
         <Link href="/leads?status=ENROLLED" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
@@ -114,17 +111,17 @@ export default async function DashboardPage() {
           <p className="text-xs text-gray-500 mt-2">{totalTickets} total</p>
         </Link>
 
-        <Link href="/leads" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
+        <Link href="/contacts" className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500">New This Week</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{newLeadsThisWeek}</p>
+              <p className="text-xs font-medium text-gray-500">Contacts</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{totalContacts}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50">
-              <Users className="h-5 w-5 text-purple-600" />
+              <ContactRound className="h-5 w-5 text-purple-600" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">leads added</p>
+          <p className="text-xs text-gray-500 mt-2">total contacts</p>
         </Link>
       </div>
 
