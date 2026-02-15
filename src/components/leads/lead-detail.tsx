@@ -6,6 +6,7 @@ import { updateLead, deleteLead } from "@/actions/leads";
 import { logActivity } from "@/actions/activities";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
+import Link from "next/link";
 import {
   ArrowLeft,
   Mail,
@@ -23,6 +24,7 @@ import {
   Hash,
   FileText,
   AlertCircle,
+  Ticket,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -58,6 +60,13 @@ interface LeadDetailProps {
       description: string;
       createdAt: string | Date;
       performedBy: { name: string };
+    }[];
+    tickets: {
+      id: string;
+      subject: string;
+      status: string;
+      priority: string;
+      createdAt: string | Date;
     }[];
   };
   staffUsers: { id: string; name: string }[];
@@ -233,6 +242,13 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
                     Email
                   </a>
                 )}
+                <Link
+                  href={`/tickets/new?leadId=${lead.id}`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
+                >
+                  <Ticket className="h-4 w-4" />
+                  Create Ticket
+                </Link>
               </div>
             )}
 
@@ -322,6 +338,37 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
               <p className="text-sm text-gray-500">No activity yet</p>
             )}
           </div>
+
+          {/* Linked Tickets */}
+          {lead.tickets && lead.tickets.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-gray-900">Tickets ({lead.tickets.length})</h2>
+                <Link href={`/tickets/new?leadId=${lead.id}`} className="text-xs text-blue-600 hover:underline">
+                  New Ticket
+                </Link>
+              </div>
+              <div className="space-y-2">
+                {lead.tickets.map((ticket) => (
+                  <Link
+                    key={ticket.id}
+                    href={`/tickets/${ticket.id}`}
+                    className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{ticket.subject}</p>
+                      <p className="text-xs text-gray-500">{formatRelativeTime(ticket.createdAt)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        {ticket.status.replace("_", " ")}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">

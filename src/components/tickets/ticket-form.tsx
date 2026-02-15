@@ -7,10 +7,21 @@ import { TICKET_PRIORITY_OPTIONS } from "@/lib/constants";
 
 interface TicketFormProps {
   staffUsers?: { id: string; name: string }[];
+  leads?: { id: string; firstName: string; lastName: string }[];
+  contacts?: { id: string; firstName: string; lastName: string }[];
+  defaultLeadId?: string;
+  defaultContactId?: string;
   isPortal?: boolean;
 }
 
-export function TicketForm({ staffUsers, isPortal }: TicketFormProps) {
+export function TicketForm({
+  staffUsers,
+  leads,
+  contacts,
+  defaultLeadId,
+  defaultContactId,
+  isPortal,
+}: TicketFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -57,34 +68,84 @@ export function TicketForm({ staffUsers, isPortal }: TicketFormProps) {
       </div>
 
       {!isPortal && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-            <select
-              name="priority"
-              defaultValue="MEDIUM"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {TICKET_PRIORITY_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-          </div>
-          {staffUsers && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
               <select
-                name="assignedToId"
+                name="priority"
+                defaultValue="MEDIUM"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="">Unassigned</option>
-                {staffUsers.map((user) => (
-                  <option key={user.id} value={user.id}>{user.name}</option>
+                {TICKET_PRIORITY_OPTIONS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
               </select>
             </div>
-          )}
-        </div>
+            {staffUsers && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                <select
+                  name="assignedToId"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">Unassigned</option>
+                  {staffUsers.map((user) => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {leads && leads.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Link to Lead</label>
+                <select
+                  name="leadId"
+                  defaultValue={defaultLeadId || ""}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">None</option>
+                  {leads.map((lead) => (
+                    <option key={lead.id} value={lead.id}>
+                      {lead.firstName} {lead.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {contacts && contacts.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Link to Contact</label>
+                <select
+                  name="contactId"
+                  defaultValue={defaultContactId || ""}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">None</option>
+                  {contacts.map((contact) => (
+                    <option key={contact.id} value={contact.id}>
+                      {contact.firstName} {contact.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <input
+                name="dueDate"
+                type="date"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </>
       )}
 
       <div className="flex gap-3 pt-2">

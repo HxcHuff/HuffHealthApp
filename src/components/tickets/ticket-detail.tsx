@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateTicket, addComment } from "@/actions/tickets";
+import Link from "next/link";
+import { updateTicket, addComment, deleteTicket } from "@/actions/tickets";
 import { TicketStatusBadge } from "./ticket-status-badge";
 import { TicketPriorityBadge } from "./ticket-priority-badge";
 import { TICKET_STATUS_OPTIONS, TICKET_PRIORITY_OPTIONS } from "@/lib/constants";
 import { formatDate, formatRelativeTime, getInitials } from "@/lib/utils";
-import { ArrowLeft, Send, Lock } from "lucide-react";
+import { ArrowLeft, Send, Lock, Trash2, Calendar, AlertTriangle } from "lucide-react";
 
 interface TicketDetailProps {
   ticket: {
@@ -17,11 +18,14 @@ interface TicketDetailProps {
     status: string;
     priority: string;
     reference: string;
+    dueDate: string | Date | null;
     createdAt: string | Date;
     updatedAt: string | Date;
     createdBy: { id: string; name: string; email: string; role: string };
     assignedTo: { id: string; name: string } | null;
     client: { id: string; name: string; email: string } | null;
+    lead: { id: string; firstName: string; lastName: string } | null;
+    contact: { id: string; firstName: string; lastName: string } | null;
     comments: {
       id: string;
       content: string;
@@ -42,11 +46,18 @@ export function TicketDetail({ ticket, staffUsers, isPortal, currentUserRole }: 
   const [isInternal, setIsInternal] = useState(false);
 
   const isStaff = currentUserRole === "ADMIN" || currentUserRole === "STAFF";
+  const isAdmin = currentUserRole === "ADMIN";
 
   // Filter internal comments for clients
   const visibleComments = isPortal
     ? ticket.comments.filter((c) => !c.isInternal)
     : ticket.comments;
+
+  const isOverdue =
+    ticket.dueDate &&
+    ticket.status !== "RESOLVED" &&
+    ticket.status !== "CLOSED" &&
+    new Date(ticket.dueDate) < new Date();
 
   async function handleStatusChange(status: string) {
     setUpdating(true);
@@ -67,6 +78,12 @@ export function TicketDetail({ ticket, staffUsers, isPortal, currentUserRole }: 
     await updateTicket(ticket.id, { assignedToId: assignedToId || null });
     setUpdating(false);
     router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this ticket?")) return;
+    await deleteTicket(ticket.id);
+    router.push("/tickets");
   }
 
   async function handleComment(formData: FormData) {
@@ -94,9 +111,24 @@ export function TicketDetail({ ticket, staffUsers, isPortal, currentUserRole }: 
             <h1 className="text-xl font-bold text-gray-900">{ticket.subject}</h1>
             <TicketStatusBadge status={ticket.status} />
             <TicketPriorityBadge priority={ticket.priority} />
+            {isOverdue && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                <AlertTriangle className="h-3 w-3" />
+                Overdue
+              </span>
+            )}
           </div>
           <p className="text-xs text-gray-500 mt-1">Ref: {ticket.reference}</p>
         </div>
+        {isAdmin && (
+          <button
+            onClick={handleDelete}
+            className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition-colors"
+            title="Delete ticket"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -233,6 +265,17 @@ export function TicketDetail({ ticket, staffUsers, isPortal, currentUserRole }: 
           )}
 
           <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+            {ticket.dueDate && (
+              <div>
+                <p className="text-xs text-gray-500">Due Date</p>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                  <p className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-gray-900"}`}>
+                    {formatDate(ticket.dueDate)}
+                  </p>
+                </div>
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-500">Created By</p>
               <p className="text-sm text-gray-900">{ticket.createdBy.name}</p>
@@ -242,6 +285,28 @@ export function TicketDetail({ ticket, staffUsers, isPortal, currentUserRole }: 
                 <p className="text-xs text-gray-500">Client</p>
                 <p className="text-sm text-gray-900">{ticket.client.name}</p>
                 <p className="text-xs text-gray-500">{ticket.client.email}</p>
+              </div>
+            )}
+            {ticket.lead && (
+              <div>
+                <p className="text-xs text-gray-500">Linked Lead</p>
+                <Link
+                  href={`/leads/${ticket.lead.id}`}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {ticket.lead.firstName} {ticket.lead.lastName} →
+                </Link>
+              </div>
+            )}
+            {ticket.contact && (
+              <div>
+                <p className="text-xs text-gray-500">Linked Contact</p>
+                <Link
+                  href={`/contacts/${ticket.contact.id}`}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {ticket.contact.firstName} {ticket.contact.lastName} →
+                </Link>
               </div>
             )}
             <div>

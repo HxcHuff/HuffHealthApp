@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createLead } from "@/actions/leads";
-import { LEAD_SOURCE_OPTIONS } from "@/lib/constants";
 
 interface LeadFormProps {
   staffUsers: { id: string; name: string }[];
+  leadSources: { id: string; name: string }[];
 }
 
-export function LeadForm({ staffUsers }: LeadFormProps) {
+export function LeadForm({ staffUsers, leadSources }: LeadFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -90,17 +90,28 @@ export function LeadForm({ staffUsers }: LeadFormProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+          <input
+            name="zipCode"
+            placeholder="e.g. 33101"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
           <select
             name="source"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Select source...</option>
-            {LEAD_SOURCE_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {leadSources.map((s) => (
+              <option key={s.id} value={s.name}>{s.name}</option>
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
           <select

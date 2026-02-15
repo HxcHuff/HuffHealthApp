@@ -14,6 +14,7 @@ interface Lead {
   email: string | null;
   phone: string | null;
   company: string | null;
+  zipCode: string | null;
   source: string | null;
   status: string;
   createdAt: string | Date;
@@ -85,6 +86,7 @@ export function LeadTable({ leads, total, page, totalPages }: LeadTableProps) {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Email</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">Company</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">Zip Code</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Source</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">Assigned</th>
@@ -112,6 +114,9 @@ export function LeadTable({ leads, total, page, totalPages }: LeadTableProps) {
                   <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">
                     {lead.company || "—"}
                   </td>
+                  <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">
+                    {lead.zipCode || "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <LeadStatusBadge status={lead.status} />
                   </td>
@@ -137,7 +142,7 @@ export function LeadTable({ leads, total, page, totalPages }: LeadTableProps) {
               ))}
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                     No leads found
                   </td>
                 </tr>

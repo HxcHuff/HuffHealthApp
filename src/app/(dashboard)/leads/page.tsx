@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getLeads, getStaffUsers } from "@/actions/leads";
+import { getLeadSources } from "@/actions/settings";
 import { LeadTable } from "@/components/leads/lead-table";
 import { LeadForm } from "@/components/leads/lead-form";
 import { PageHeader } from "@/components/shared/page-header";
@@ -13,11 +14,14 @@ export default async function LeadsPage({ searchParams }: Props) {
   const showNew = params.new === "true";
 
   if (showNew) {
-    const staffUsers = await getStaffUsers();
+    const [staffUsers, leadSources] = await Promise.all([
+      getStaffUsers(),
+      getLeadSources(),
+    ]);
     return (
       <>
         <PageHeader title="Create New Lead" />
-        <LeadForm staffUsers={staffUsers} />
+        <LeadForm staffUsers={staffUsers} leadSources={leadSources} />
       </>
     );
   }

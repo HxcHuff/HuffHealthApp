@@ -7,6 +7,8 @@ export const CreateTicketSchema = z.object({
   assignedToId: z.string().optional(),
   clientId: z.string().optional(),
   leadId: z.string().optional(),
+  contactId: z.string().optional(),
+  dueDate: z.string().optional(),
 });
 
 export const UpdateTicketSchema = z.object({
@@ -15,6 +17,7 @@ export const UpdateTicketSchema = z.object({
   status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   assignedToId: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable(),
 });
 
 export const CreateCommentSchema = z.object({

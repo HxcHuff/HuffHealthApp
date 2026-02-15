@@ -27,17 +27,6 @@ export const ROLE_OPTIONS = [
   { value: "CLIENT", label: "Client" },
 ] as const;
 
-export const LEAD_SOURCE_OPTIONS = [
-  "Facebook Lead Ad",
-  "Website",
-  "Referral",
-  "Cold Call",
-  "Email Campaign",
-  "CSV Import",
-  "Manual Entry",
-  "Other",
-] as const;
-
 export const CHART_COLORS = {
   lead: {
     NEW_LEAD: "#3b82f6",

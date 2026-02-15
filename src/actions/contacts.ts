@@ -125,6 +125,11 @@ export async function getContact(id: string) {
         orderBy: { createdAt: "desc" },
         take: 50,
       },
+      tickets: {
+        select: { id: true, subject: true, status: true, priority: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      },
     },
   });
 }

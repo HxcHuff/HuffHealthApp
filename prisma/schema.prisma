@@ -161,6 +161,7 @@ model Contact {
 
   lead       Lead?
   activities Activity[]
+  tickets    Ticket[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -183,7 +184,10 @@ model Ticket {
   clientId     String?
   client       User?   @relation("ClientTickets", fields: [clientId], references: [id])
   leadId       String?
-  lead         Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  lead         Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  contactId    String?
+  contact      Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  dueDate      DateTime?
 
   comments   TicketComment[]
   activities Activity[]
@@ -195,6 +199,7 @@ model Ticket {
   @@index([priority])
   @@index([assignedToId])
   @@index([clientId])
+  @@index([contactId])
   @@index([createdAt])
 }
 
@@ -273,4 +278,12 @@ model FacebookIntegration {
 
   @@index([pageId])
   @@index([isActive])
+}
+
+model LeadSource {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
 }

@@ -136,6 +136,7 @@ export async function getLeads({
       { lastName: { contains: search, mode: "insensitive" } },
       { email: { contains: search, mode: "insensitive" } },
       { company: { contains: search, mode: "insensitive" } },
+      { zipCode: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -169,6 +170,11 @@ export async function getLead(id: string) {
         },
         orderBy: { createdAt: "desc" },
         take: 50,
+      },
+      tickets: {
+        select: { id: true, subject: true, status: true, priority: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 10,
       },
     },
   });

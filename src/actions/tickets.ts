@@ -17,6 +17,9 @@ export async function createTicket(formData: FormData) {
     priority: (formData.get("priority") as string) || "MEDIUM",
     assignedToId: formData.get("assignedToId") as string || undefined,
     clientId: formData.get("clientId") as string || undefined,
+    leadId: formData.get("leadId") as string || undefined,
+    contactId: formData.get("contactId") as string || undefined,
+    dueDate: formData.get("dueDate") as string || undefined,
   };
 
   const validated = CreateTicketSchema.safeParse(raw);
@@ -25,12 +28,15 @@ export async function createTicket(formData: FormData) {
   }
 
   const isClient = session.user.role === "CLIENT";
+  const { dueDate, ...rest } = validated.data;
+
   const ticket = await db.ticket.create({
     data: {
-      ...validated.data,
+      ...rest,
       createdById: session.user.id,
-      clientId: isClient ? session.user.id : validated.data.clientId,
-      priority: isClient ? "MEDIUM" : validated.data.priority,
+      clientId: isClient ? session.user.id : rest.clientId,
+      priority: isClient ? "MEDIUM" : rest.priority,
+      dueDate: dueDate ? new Date(dueDate) : undefined,
     },
   });
 
@@ -59,9 +65,15 @@ export async function updateTicket(id: string, data: Record<string, unknown>) {
   const existing = await db.ticket.findUnique({ where: { id } });
   if (!existing) return { error: "Ticket not found" };
 
+  const { dueDate, ...rest } = validated.data;
+  const updateData: Record<string, unknown> = { ...rest };
+  if (dueDate !== undefined) {
+    updateData.dueDate = dueDate ? new Date(dueDate) : null;
+  }
+
   const ticket = await db.ticket.update({
     where: { id },
-    data: validated.data,
+    data: updateData,
   });
 
   if (validated.data.status && validated.data.status !== existing.status) {
@@ -83,6 +95,17 @@ export async function updateTicket(id: string, data: Record<string, unknown>) {
   revalidatePath(`/tickets/${id}`);
   revalidatePath("/portal/tickets");
   return { success: true, ticket };
+}
+
+export async function deleteTicket(id: string) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  await db.ticket.delete({ where: { id } });
+  revalidatePath("/tickets");
+  return { success: true };
 }
 
 export async function addComment(ticketId: string, formData: FormData) {
@@ -191,6 +214,8 @@ export async function getTicket(id: string) {
       createdBy: { select: { id: true, name: true, email: true, role: true } },
       assignedTo: { select: { id: true, name: true, email: true } },
       client: { select: { id: true, name: true, email: true } },
+      lead: { select: { id: true, firstName: true, lastName: true } },
+      contact: { select: { id: true, firstName: true, lastName: true } },
       comments: {
         include: {
           author: { select: { id: true, name: true, email: true, role: true, image: true } },

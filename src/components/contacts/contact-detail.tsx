@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { deleteContact } from "@/actions/contacts";
 import { logActivity } from "@/actions/activities";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
@@ -18,6 +19,7 @@ import {
   Clock,
   FileText,
   Send,
+  Ticket,
 } from "lucide-react";
 
 interface ContactDetailProps {
@@ -43,6 +45,13 @@ interface ContactDetailProps {
       description: string;
       createdAt: string | Date;
       performedBy: { name: string };
+    }[];
+    tickets: {
+      id: string;
+      subject: string;
+      status: string;
+      priority: string;
+      createdAt: string | Date;
     }[];
   };
 }
@@ -192,6 +201,13 @@ export function ContactDetail({ contact }: ContactDetailProps) {
                   <Mail className="h-4 w-4" />
                   Email
                 </a>
+                <Link
+                  href={`/tickets/new?contactId=${contact.id}`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
+                >
+                  <Ticket className="h-4 w-4" />
+                  Create Ticket
+                </Link>
               </div>
             )}
 
@@ -234,6 +250,35 @@ export function ContactDetail({ contact }: ContactDetailProps) {
               <p className="text-sm text-gray-500">No interactions logged yet</p>
             )}
           </div>
+
+          {/* Linked Tickets */}
+          {contact.tickets && contact.tickets.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-gray-900">Tickets ({contact.tickets.length})</h2>
+                <Link href={`/tickets/new?contactId=${contact.id}`} className="text-xs text-blue-600 hover:underline">
+                  New Ticket
+                </Link>
+              </div>
+              <div className="space-y-2">
+                {contact.tickets.map((ticket) => (
+                  <Link
+                    key={ticket.id}
+                    href={`/tickets/${ticket.id}`}
+                    className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{ticket.subject}</p>
+                      <p className="text-xs text-gray-500">{formatRelativeTime(ticket.createdAt)}</p>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                      {ticket.status.replace("_", " ")}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar */}
