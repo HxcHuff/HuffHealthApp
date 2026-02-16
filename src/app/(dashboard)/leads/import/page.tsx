@@ -26,6 +26,7 @@ export default function ImportLeadsPage() {
   const [listName, setListName] = useState("");
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -79,23 +80,55 @@ export default function ImportLeadsPage() {
     if (!parsedFile) return;
 
     setStep("importing");
+    setImportProgress(null);
+
+    const BATCH_SIZE = 75;
+    const totalRows = parsedFile.rows.length;
+    const totalBatches = Math.ceil(totalRows / BATCH_SIZE);
+    const source = fileName.toLowerCase().includes("facebook") ? "Facebook" : "CSV Import";
+
+    let listId: string | undefined;
+    let totalSuccess = 0;
+    let totalFailed = 0;
+    const allErrors: { row: number; error: string }[] = [];
+
     try {
-      const response = await fetch("/api/leads/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rows: parsedFile.rows,
-          mappings,
-          listName,
-          fileName,
-          source: fileName.toLowerCase().includes("facebook") ? "Facebook" : "CSV Import",
-        }),
+      for (let batch = 0; batch < totalBatches; batch++) {
+        const start = batch * BATCH_SIZE;
+        const batchRows = parsedFile.rows.slice(start, start + BATCH_SIZE);
+        setImportProgress({ current: batch + 1, total: totalBatches });
+
+        const response = await fetch("/api/leads/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rows: batchRows,
+            mappings,
+            listName,
+            fileName,
+            source,
+            listId,
+            batchNumber: batch + 1,
+            totalBatches,
+            totalRows,
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Import failed");
+
+        if (!listId) listId = result.listId;
+        totalSuccess += result.successCount;
+        totalFailed += result.failedCount;
+        if (result.errors) allErrors.push(...result.errors);
+      }
+
+      setImportResult({
+        totalProcessed: totalRows,
+        successCount: totalSuccess,
+        failedCount: totalFailed,
+        errors: allErrors,
       });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Import failed");
-
-      setImportResult(result);
       setStep("results");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Import failed");
@@ -281,7 +314,13 @@ export default function ImportLeadsPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
           <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-sm font-medium text-gray-700">Importing leads...</p>
-          <p className="text-xs text-gray-500 mt-1">This may take a moment for large files.</p>
+          {importProgress ? (
+            <p className="text-xs text-gray-500 mt-1">
+              Batch {importProgress.current} of {importProgress.total}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500 mt-1">This may take a moment for large files.</p>
+          )}
         </div>
       )}
 
