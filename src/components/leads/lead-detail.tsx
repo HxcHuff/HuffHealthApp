@@ -7,6 +7,7 @@ import { logActivity } from "@/actions/activities";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import Link from "next/link";
+import { DripPanel } from "@/components/shared/drip-panel";
 import {
   ArrowLeft,
   Mail,
@@ -404,6 +405,10 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
               ))}
             </select>
           </div>
+
+          {lead.email && process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (
+            <DripPanel email={lead.email} entityType="lead" entityId={lead.id} />
+          )}
 
           <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
             <div>

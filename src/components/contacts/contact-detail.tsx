@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { deleteContact } from "@/actions/contacts";
 import { logActivity } from "@/actions/activities";
+import { DripPanel } from "@/components/shared/drip-panel";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -319,6 +320,10 @@ export function ContactDetail({ contact }: ContactDetailProps) {
               </button>
             </div>
           </div>
+
+          {process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (
+            <DripPanel email={contact.email} entityType="contact" entityId={contact.id} />
+          )}
 
           {/* Info Card */}
           <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
