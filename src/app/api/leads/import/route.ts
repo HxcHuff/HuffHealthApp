@@ -3,45 +3,75 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import type { FieldMapping, ImportResult } from "@/lib/csv-parser";
 
+export const maxDuration = 25; // Netlify Pro allows up to 26s
+
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session || !["ADMIN", "STAFF"].includes(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { rows, mappings, listName, fileName, source } = body as {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+  }
+
+  const {
+    rows,
+    mappings,
+    listName,
+    fileName,
+    source,
+    listId: existingListId,
+    batchNumber = 1,
+    totalBatches = 1,
+    totalRows,
+  } = body as {
     rows: Record<string, string>[];
     mappings: FieldMapping[];
     listName: string;
     fileName: string;
     source: string;
+    listId?: string;
+    batchNumber?: number;
+    totalBatches?: number;
+    totalRows?: number;
   };
 
   if (!rows || !mappings || !listName) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const leadList = await db.leadList.create({
-    data: {
-      name: listName,
-      fileName,
-      source,
-      totalRecords: rows.length,
-      fieldMapping: mappings as object[],
-      uploadedById: session.user.id,
-    },
-  });
+  // On first batch, create the lead list. On subsequent batches, reuse it.
+  let listId = existingListId;
+  if (!listId) {
+    const leadList = await db.leadList.create({
+      data: {
+        name: listName,
+        fileName,
+        source,
+        totalRecords: totalRows || rows.length,
+        fieldMapping: mappings as object[],
+        uploadedById: session.user.id,
+      },
+    });
+    listId = leadList.id;
+  }
 
   const activeMappings = mappings.filter((m) => m.leadField !== "skip");
-  const result: ImportResult = {
+  const result: ImportResult & { listId: string } = {
     totalProcessed: rows.length,
     successCount: 0,
     failedCount: 0,
     errors: [],
+    listId,
   };
 
-  const CHUNK_SIZE = 100;
+  // Process this batch — rows are already a manageable size (75 from frontend)
+  // But we still chunk DB inserts for safety
+  const CHUNK_SIZE = 50;
   for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
     const chunk = rows.slice(i, i + CHUNK_SIZE);
     const leadsToCreate: {
@@ -92,7 +122,6 @@ export async function POST(request: NextRequest) {
       }
 
       if (!lead.firstName && !lead.lastName) {
-        // Try to split a "name" or "full_name" field
         const fullName = lead.firstName || row["name"] || row["full_name"] || row["Name"] || "";
         if (fullName) {
           const parts = fullName.trim().split(/\s+/);
@@ -130,7 +159,7 @@ export async function POST(request: NextRequest) {
         price: lead.price || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         createdById: session.user.id,
-        leadListId: leadList.id,
+        leadListId: listId,
       });
     }
 
@@ -161,27 +190,36 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  await db.leadList.update({
-    where: { id: leadList.id },
-    data: {
-      importedCount: result.successCount,
-      failedCount: result.failedCount,
-    },
-  });
+  // On the last batch, update the list totals and log activity
+  if (batchNumber === totalBatches) {
+    try {
+      // Get cumulative counts from all leads in this list
+      const totalImported = await db.lead.count({ where: { leadListId: listId } });
+      await db.leadList.update({
+        where: { id: listId },
+        data: {
+          importedCount: totalImported,
+          failedCount: (totalRows || rows.length) - totalImported,
+        },
+      });
 
-  await db.activity.create({
-    data: {
-      type: "LEAD_IMPORTED",
-      description: `Imported ${result.successCount} leads from "${listName}"`,
-      performedById: session.user.id,
-      metadata: {
-        listId: leadList.id,
-        totalProcessed: result.totalProcessed,
-        successCount: result.successCount,
-        failedCount: result.failedCount,
-      },
-    },
-  });
+      await db.activity.create({
+        data: {
+          type: "LEAD_IMPORTED",
+          description: `Imported ${totalImported} leads from "${listName}"`,
+          performedById: session.user.id,
+          metadata: {
+            listId,
+            totalProcessed: totalRows || rows.length,
+            successCount: totalImported,
+          },
+        },
+      });
+    } catch (finalizeError) {
+      console.error("Failed to finalize import:", finalizeError);
+      // Don't fail the whole request — the leads are already imported
+    }
+  }
 
   return NextResponse.json(result);
 }
