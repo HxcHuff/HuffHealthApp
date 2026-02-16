@@ -13,6 +13,8 @@ export async function createContact(formData: FormData) {
     return { error: "Unauthorized" };
   }
 
+  const leadId = formData.get("leadId") as string | null;
+
   const raw = {
     firstName: formData.get("firstName") as string,
     lastName: formData.get("lastName") as string,
@@ -35,6 +37,14 @@ export async function createContact(formData: FormData) {
   const contact = await db.contact.create({
     data: validated.data,
   });
+
+  // Link the lead to this contact if leadId was provided
+  if (leadId) {
+    await db.lead.update({
+      where: { id: leadId },
+      data: { contactId: contact.id, status: "ENROLLED" },
+    }).catch(() => {});
+  }
 
   await logActivity({
     type: "NOTE",

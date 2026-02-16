@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getContacts } from "@/actions/contacts";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ContactForm } from "@/components/contacts/contact-form";
 import { formatRelativeTime } from "@/lib/utils";
 import { Contact, Plus } from "lucide-react";
 
@@ -11,6 +12,26 @@ interface Props {
 
 export default async function ContactsPage({ searchParams }: Props) {
   const params = await searchParams;
+  const showNew = params.new === "true";
+
+  if (showNew) {
+    return (
+      <>
+        <PageHeader title="Create New Contact" />
+        <ContactForm
+          defaultValues={{
+            firstName: params.firstName,
+            lastName: params.lastName,
+            email: params.email,
+            phone: params.phone,
+            zipCode: params.zipCode,
+            leadId: params.leadId,
+          }}
+        />
+      </>
+    );
+  }
+
   const page = Number(params.page) || 1;
   const search = params.search;
 

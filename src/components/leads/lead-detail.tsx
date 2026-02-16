@@ -25,7 +25,7 @@ import {
   Hash,
   FileText,
   AlertCircle,
-  Ticket,
+  UserPlus,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -244,11 +244,11 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
                   </a>
                 )}
                 <Link
-                  href={`/tickets/new?leadId=${lead.id}`}
+                  href={`/contacts?new=true&leadId=${lead.id}&firstName=${encodeURIComponent(lead.firstName)}&lastName=${encodeURIComponent(lead.lastName)}&email=${encodeURIComponent(lead.email || "")}&phone=${encodeURIComponent(lead.phone || "")}&zipCode=${encodeURIComponent(lead.zipCode || "")}`}
                   className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
                 >
-                  <Ticket className="h-4 w-4" />
-                  Create Ticket
+                  <UserPlus className="h-4 w-4" />
+                  Create Contact
                 </Link>
               </div>
             )}
