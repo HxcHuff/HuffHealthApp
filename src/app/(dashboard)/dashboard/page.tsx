@@ -21,43 +21,44 @@ import {
 } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await auth();
-  if (!session) return null;
+  try {
+    const session = await auth();
+    if (!session) return null;
 
-  const [
-    totalLeads,
-    leadsByStatus,
-    openTickets,
-    totalTickets,
-    totalContacts,
-    recentActivities,
-    upcomingTasks,
-  ] = await Promise.all([
-    db.lead.count(),
-    db.lead.groupBy({ by: ["status"], _count: true }),
-    db.ticket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
-    db.ticket.count(),
-    db.contact.count(),
-    getRecentActivities(15),
-    getUpcomingTasks(5),
-  ]);
+    const [
+      totalLeads,
+      leadsByStatus,
+      openTickets,
+      totalTickets,
+      totalContacts,
+      recentActivities,
+      upcomingTasks,
+    ] = await Promise.all([
+      db.lead.count(),
+      db.lead.groupBy({ by: ["status"], _count: true }),
+      db.ticket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
+      db.ticket.count(),
+      db.contact.count(),
+      getRecentActivities(15),
+      getUpcomingTasks(5),
+    ]);
 
-  const statusCounts: Record<string, number> = {};
-  for (const item of leadsByStatus) {
-    statusCounts[item.status] = item._count;
-  }
+    const statusCounts: Record<string, number> = {};
+    for (const item of leadsByStatus) {
+      statusCounts[item.status] = item._count;
+    }
 
-  const enrolledCount = statusCounts["ENROLLED"] || 0;
-  const conversionRate = totalLeads > 0 ? ((enrolledCount / totalLeads) * 100).toFixed(1) : "0";
+    const enrolledCount = statusCounts["ENROLLED"] || 0;
+    const conversionRate = totalLeads > 0 ? ((enrolledCount / totalLeads) * 100).toFixed(1) : "0";
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Welcome back, {session.user.name}
-        </p>
-      </div>
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Welcome back, {session.user.name}
+          </p>
+        </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -308,5 +309,15 @@ export default async function DashboardPage() {
         </div>
       </div>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+        <h1 className="text-lg font-semibold text-red-800">Error loading dashboard</h1>
+        <p className="text-sm text-red-600 mt-1">{message}</p>
+      </div>
+    );
+  }
 }
