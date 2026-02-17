@@ -10,11 +10,7 @@ import {
   TrendingUp,
   Ticket,
   ContactRound,
-  Plus,
-  Upload,
   Clock,
-  Zap,
-  ClipboardList,
   CheckSquare,
   Calendar,
   AlertCircle,
@@ -238,76 +234,6 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Link
-            href="/leads?new=true"
-            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
-              <Plus className="h-4 w-4 text-blue-700" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Add Lead</p>
-              <p className="text-xs text-gray-500">Create a new lead manually</p>
-            </div>
-          </Link>
-          <Link
-            href="/leads/import"
-            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100">
-              <Upload className="h-4 w-4 text-green-700" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Import Leads</p>
-              <p className="text-xs text-gray-500">Upload CSV or Excel file</p>
-            </div>
-          </Link>
-          <Link
-            href="/tickets/new"
-            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100">
-              <Ticket className="h-4 w-4 text-orange-700" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Create Ticket</p>
-              <p className="text-xs text-gray-500">Open a support ticket</p>
-            </div>
-          </Link>
-          <Link
-            href="/actions"
-            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100">
-              <ClipboardList className="h-4 w-4 text-indigo-700" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Actions</p>
-              <p className="text-xs text-gray-500">Insurance task shortcuts</p>
-            </div>
-          </Link>
-          {process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (
-            <a
-              href={process.env.NEXT_PUBLIC_DRIP_ENGINE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100">
-                <Zap className="h-4 w-4 text-cyan-700" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Drip Campaigns</p>
-                <p className="text-xs text-gray-500">Manage automated messaging</p>
-              </div>
-            </a>
-          )}
-        </div>
-      </div>
     </div>
     );
   } catch (error) {
