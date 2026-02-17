@@ -17,6 +17,8 @@ import {
   CheckSquare,
   Zap,
   ExternalLink,
+  Plus,
+  TicketPlus,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,14 +27,19 @@ interface SidebarProps {
 
 const staffNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/actions", label: "Actions", icon: ClipboardList },
   { href: "/leads", label: "Leads", icon: Target },
   { href: "/leads/pipeline", label: "Pipeline", icon: Kanban },
-  { href: "/leads/import", label: "Import Leads", icon: Upload },
   { href: "/tickets", label: "Tickets", icon: Ticket },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/contacts", label: "Contacts", icon: Contact },
   { href: "/announcements", label: "Announcements", icon: Megaphone },
+];
+
+const quickActionItems = [
+  { href: "/leads?new=true", label: "Add Lead", icon: Plus },
+  { href: "/leads/import", label: "Import Leads", icon: Upload },
+  { href: "/tickets/new", label: "Create Ticket", icon: TicketPlus },
+  { href: "/actions", label: "Actions", icon: ClipboardList },
 ];
 
 const adminOnlyItems = [
@@ -93,6 +100,33 @@ export function Sidebar({ role }: SidebarProps) {
             </li>
           )}
         </ul>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quick Actions</p>
+          <ul className="space-y-1">
+            {quickActionItems.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    )}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
     </aside>
   );
