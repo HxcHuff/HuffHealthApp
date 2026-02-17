@@ -14,6 +14,7 @@ import {
   Upload,
   Kanban,
   ClipboardList,
+  CheckSquare,
   Zap,
   ExternalLink,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const staffNavItems = [
   { href: "/leads/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/leads/import", label: "Import Leads", icon: Upload },
   { href: "/tickets", label: "Tickets", icon: Ticket },
+  { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/contacts", label: "Contacts", icon: Contact },
   { href: "/announcements", label: "Announcements", icon: Megaphone },
 ];

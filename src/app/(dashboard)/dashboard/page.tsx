@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { getRecentActivities } from "@/actions/activities";
+import { getUpcomingTasks } from "@/actions/tasks";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, cn } from "@/lib/utils";
 import Link from "next/link";
 import {
   Target,
@@ -14,6 +15,9 @@ import {
   Clock,
   Zap,
   ClipboardList,
+  CheckSquare,
+  Calendar,
+  AlertCircle,
 } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -27,6 +31,7 @@ export default async function DashboardPage() {
     totalTickets,
     totalContacts,
     recentActivities,
+    upcomingTasks,
   ] = await Promise.all([
     db.lead.count(),
     db.lead.groupBy({ by: ["status"], _count: true }),
@@ -34,6 +39,7 @@ export default async function DashboardPage() {
     db.ticket.count(),
     db.contact.count(),
     getRecentActivities(15),
+    getUpcomingTasks(5),
   ]);
 
   const statusCounts: Record<string, number> = {};
@@ -182,6 +188,53 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-500">No activity yet. Start by adding leads or creating tickets.</p>
           )}
         </div>
+      </div>
+
+      {/* My Upcoming Tasks */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-900">My Upcoming Tasks</h2>
+          <Link href="/tasks" className="text-xs text-blue-600 hover:underline">
+            View all
+          </Link>
+        </div>
+        {upcomingTasks.length > 0 ? (
+          <div className="space-y-2">
+            {upcomingTasks.map((task) => {
+              const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+              return (
+                <div key={task.id} className="flex items-center gap-3 rounded-lg border border-gray-100 p-3">
+                  <CheckSquare className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {task.dueDate && (
+                        <span className={cn(
+                          "inline-flex items-center gap-1 text-xs",
+                          isOverdue ? "text-red-600" : "text-gray-500"
+                        )}>
+                          {isOverdue && <AlertCircle className="h-3 w-3" />}
+                          <Calendar className="h-3 w-3" />
+                          {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      )}
+                      {task.lead && (
+                        <Link
+                          href={`/leads/${task.lead.id}`}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {task.lead.firstName} {task.lead.lastName}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">No upcoming tasks. You&apos;re all caught up!</p>
+        )}
       </div>
 
       {/* Quick Actions */}

@@ -87,6 +87,35 @@ export async function getDripSequences(): Promise<DripSequence[]> {
   }
 }
 
+export async function autoEnrollByStatus(email: string, newStatus: string): Promise<void> {
+  const { DRIP_STATUS_SEQUENCE_MAP } = await import("@/lib/constants");
+  const sequenceName = DRIP_STATUS_SEQUENCE_MAP[newStatus];
+  if (!sequenceName) return;
+
+  try {
+    const sequences = await getDripSequences();
+    const match = sequences.find(
+      (s) => s.name.toLowerCase() === sequenceName.toLowerCase()
+    );
+    if (!match) return;
+
+    const contact = await getDripContact(email);
+    if (!contact) return;
+
+    await syncToDripEngine({
+      first_name: contact.first_name,
+      last_name: contact.last_name,
+      email: contact.email,
+      phone: contact.phone,
+      zip_code: contact.zip_code,
+      plan_type: contact.plan_type,
+      lead_source: contact.lead_source,
+    });
+  } catch (err) {
+    console.error("[drip-engine] Auto-enroll failed:", (err as Error).message);
+  }
+}
+
 export async function enrollInSequence(contactEmail: string, sequenceId: string): Promise<boolean> {
   const url = process.env.DRIP_ENGINE_URL;
   if (!url) return false;

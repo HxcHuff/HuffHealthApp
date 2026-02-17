@@ -26,6 +26,7 @@ import {
   FileText,
   AlertCircle,
   UserPlus,
+  CheckSquare,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -249,6 +250,13 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
                 >
                   <UserPlus className="h-4 w-4" />
                   Create Contact
+                </Link>
+                <Link
+                  href={`/tasks?new=true&leadId=${lead.id}&leadName=${encodeURIComponent(lead.firstName + " " + lead.lastName)}&title=${encodeURIComponent("Follow up with " + lead.firstName + " " + lead.lastName)}`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  Add Follow-up
                 </Link>
               </div>
             )}

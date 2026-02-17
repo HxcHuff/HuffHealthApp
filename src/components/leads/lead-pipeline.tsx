@@ -5,18 +5,21 @@ import { useRouter } from "next/navigation";
 import { updateLead } from "@/actions/leads";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { GripVertical, Phone, MapPin, Clock } from "lucide-react";
+import { GripVertical, Phone, MapPin, Clock, Mail, User, Zap } from "lucide-react";
 import Link from "next/link";
 
 interface Lead {
   id: string;
   firstName: string;
   lastName: string;
+  email: string | null;
   phone: string | null;
   zipCode: string | null;
   source: string | null;
   status: string;
   stageEnteredAt: string | Date;
+  dripSyncedAt: string | Date | null;
+  assignedTo: { id: string; name: string } | null;
 }
 
 interface LeadPipelineProps {
@@ -123,11 +126,12 @@ export function LeadPipeline({ leads: initialLeads }: LeadPipelineProps) {
             >
               <div
                 className={cn(
-                  "rounded-xl border border-gray-200 bg-gray-50 min-h-[75vh] transition-colors",
+                  "rounded-xl border border-gray-200 bg-gray-50 flex flex-col transition-colors",
+                  "h-[calc(100vh-12rem)]",
                   isDropTarget && "border-blue-400 bg-blue-50/50"
                 )}
               >
-                <div className="px-3 py-3 border-b border-gray-200">
+                <div className="px-3 py-3 border-b border-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <span
                       className={cn(
@@ -142,7 +146,7 @@ export function LeadPipeline({ leads: initialLeads }: LeadPipelineProps) {
                     </span>
                   </div>
                 </div>
-                <div className="p-2 space-y-2">
+                <div className="p-2 space-y-2 overflow-y-auto flex-1">
                   {column.leads.map((lead) => {
                     const days = getDaysInStage(lead.stageEnteredAt);
                     return (
@@ -164,8 +168,20 @@ export function LeadPipeline({ leads: initialLeads }: LeadPipelineProps) {
                             >
                               {lead.firstName} {lead.lastName}
                             </Link>
-                            {lead.phone && (
+                            {lead.email && (
                               <div className="flex items-center gap-1 mt-1">
+                                <Mail className="h-3 w-3 text-gray-400" />
+                                <a
+                                  href={`mailto:${lead.email}`}
+                                  className="text-xs text-gray-500 hover:text-blue-600 truncate"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {lead.email}
+                                </a>
+                              </div>
+                            )}
+                            {lead.phone && (
+                              <div className="flex items-center gap-1 mt-0.5">
                                 <Phone className="h-3 w-3 text-gray-400" />
                                 <a
                                   href={`tel:${lead.phone}`}
@@ -185,11 +201,27 @@ export function LeadPipeline({ leads: initialLeads }: LeadPipelineProps) {
                             {lead.source && (
                               <p className="text-xs text-gray-400 mt-1 truncate">{lead.source}</p>
                             )}
-                            <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100">
-                              <Clock className="h-3 w-3 text-gray-400" />
-                              <span className={cn("text-xs font-medium", getDaysColor(days))}>
-                                {getDaysLabel(days)}
-                              </span>
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-gray-400" />
+                                  <span className={cn("text-xs font-medium", getDaysColor(days))}>
+                                    {getDaysLabel(days)}
+                                  </span>
+                                </div>
+                                {lead.dripSyncedAt && (
+                                  <span title="Synced to Drip">
+                                    <Zap className="h-3 w-3 text-yellow-500" />
+                                  </span>
+                                )}
+                              </div>
+                              {lead.assignedTo && (
+                                <div className="flex items-center gap-1" title={lead.assignedTo.name}>
+                                  <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-medium">
+                                    {lead.assignedTo.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

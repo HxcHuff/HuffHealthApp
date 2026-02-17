@@ -47,6 +47,8 @@ export async function syncToDrip(
         lead_source: lead.source || undefined,
         crm_lead_id: lead.id,
       });
+
+      await db.lead.update({ where: { id }, data: { dripSyncedAt: new Date() } });
     } else {
       const contact = await db.contact.findUnique({ where: { id } });
       if (!contact) return { success: false, error: "Contact not found" };

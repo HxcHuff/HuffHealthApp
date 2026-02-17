@@ -45,3 +45,29 @@ export const CHART_COLORS = {
   primary: "#2563eb",
   primaryLight: "#93c5fd",
 } as const;
+
+export const FILTER_LABELS: Record<string, string> = {
+  turning65: "Turning 65 — Medicare Eligible",
+  turning26: "Turning 26 — Aging Off Parent's Plan",
+  turning55: "Turning 55 — HSA Catch-Up Eligible",
+  birthdayThisMonth: "Birthdays This Month",
+  aep: "AEP Clients",
+  oep: "OEP Clients",
+  maoep: "Medicare MA OEP Clients",
+  sep: "Special Enrollment — Life Events",
+  renewalSoon: "Renewals Coming Up",
+  gracePeriod: "Grace Period — At Risk",
+  lapsed: "Lapsed Policies",
+  annualReview: "Annual Review Due",
+  followUpDue: "Follow-Up Reminders",
+  openQuotes: "Open Quotes",
+  today: "New Leads Today",
+  overdue: "Overdue — Needs Attention",
+};
+
+export const DRIP_STATUS_SEQUENCE_MAP: Record<string, string> = {
+  CONTACTED: "New Contact Follow-Up",
+  QUOTED: "Quote Follow-Up",
+  APPLICATION_SENT: "Application Submitted",
+  ENROLLED: "Welcome & Onboarding",
+};
