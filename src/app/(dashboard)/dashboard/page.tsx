@@ -1,12 +1,6 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { getRecentActivities } from "@/actions/activities";
-import {
-  getLeadTrendsData,
-  getTicketResolutionData,
-  getConversionFunnelData,
-  getLeadSourcePerformanceData,
-} from "@/actions/dashboard";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/utils";
 import Link from "next/link";
@@ -19,12 +13,8 @@ import {
   Upload,
   Clock,
   Zap,
+  ClipboardList,
 } from "lucide-react";
-import { ChartCard } from "@/components/dashboard/chart-card";
-import { LeadTrendsChart } from "@/components/dashboard/lead-trends-chart";
-import { TicketResolutionChart } from "@/components/dashboard/ticket-resolution-chart";
-import { ConversionFunnelChart } from "@/components/dashboard/conversion-funnel-chart";
-import { LeadSourceChart } from "@/components/dashboard/lead-source-chart";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -37,10 +27,6 @@ export default async function DashboardPage() {
     totalTickets,
     totalContacts,
     recentActivities,
-    leadTrends,
-    ticketResolution,
-    conversionFunnel,
-    leadSources,
   ] = await Promise.all([
     db.lead.count(),
     db.lead.groupBy({ by: ["status"], _count: true }),
@@ -48,10 +34,6 @@ export default async function DashboardPage() {
     db.ticket.count(),
     db.contact.count(),
     getRecentActivities(15),
-    getLeadTrendsData(30),
-    getTicketResolutionData(),
-    getConversionFunnelData(),
-    getLeadSourcePerformanceData(),
   ]);
 
   const statusCounts: Record<string, number> = {};
@@ -124,22 +106,6 @@ export default async function DashboardPage() {
           </div>
           <p className="text-xs text-gray-500 mt-2">total contacts</p>
         </Link>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Lead Trends (Last 30 Days)" href="/leads">
-          <LeadTrendsChart data={leadTrends} />
-        </ChartCard>
-        <ChartCard title="Ticket Status" href="/tickets">
-          <TicketResolutionChart data={ticketResolution} />
-        </ChartCard>
-        <ChartCard title="Conversion Funnel" href="/leads/pipeline">
-          <ConversionFunnelChart data={conversionFunnel} />
-        </ChartCard>
-        <ChartCard title="Lead Sources" href="/settings/sources">
-          <LeadSourceChart data={leadSources} />
-        </ChartCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -221,7 +187,7 @@ export default async function DashboardPage() {
       {/* Quick Actions */}
       <div className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Link
             href="/leads?new=true"
             className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
@@ -256,6 +222,18 @@ export default async function DashboardPage() {
             <div>
               <p className="text-sm font-medium text-gray-900">Create Ticket</p>
               <p className="text-xs text-gray-500">Open a support ticket</p>
+            </div>
+          </Link>
+          <Link
+            href="/actions"
+            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100">
+              <ClipboardList className="h-4 w-4 text-indigo-700" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Actions</p>
+              <p className="text-xs text-gray-500">Insurance task shortcuts</p>
             </div>
           </Link>
           {process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (

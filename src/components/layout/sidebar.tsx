@@ -13,6 +13,7 @@ import {
   Settings,
   Upload,
   Kanban,
+  ClipboardList,
   Zap,
   ExternalLink,
 } from "lucide-react";
@@ -23,6 +24,7 @@ interface SidebarProps {
 
 const staffNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/actions", label: "Actions", icon: ClipboardList },
   { href: "/leads", label: "Leads", icon: Target },
   { href: "/leads/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/leads/import", label: "Import Leads", icon: Upload },
