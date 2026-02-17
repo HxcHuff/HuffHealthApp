@@ -294,6 +294,13 @@ model LeadSource {
   createdAt DateTime @default(now())
 }
 
+model SiteSettings {
+  id             String  @id @default("default")
+  landingPageUrl String?
+
+  updatedAt DateTime @updatedAt
+}
+
 model Task {
   id          String         @id @default(cuid())
   title       String

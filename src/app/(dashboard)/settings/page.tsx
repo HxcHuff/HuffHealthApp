@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
-import { Users, Bell, Facebook, User, ListFilter } from "lucide-react";
+import { Users, Bell, Facebook, User, ListFilter, Globe } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -82,6 +82,20 @@ export default async function SettingsPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Facebook Lead Ads</p>
                   <p className="text-xs text-gray-500">Connect your Facebook page</p>
+                </div>
+              </div>
+            </Link>
+            <Link
+              href="/settings/landing-page"
+              className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50">
+                  <Globe className="h-5 w-5 text-cyan-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Landing Page</p>
+                  <p className="text-xs text-gray-500">Set your website URL</p>
                 </div>
               </div>
             </Link>

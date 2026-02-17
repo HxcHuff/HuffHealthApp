@@ -19,10 +19,12 @@ import {
   ExternalLink,
   Plus,
   TicketPlus,
+  Globe,
 } from "lucide-react";
 
 interface SidebarProps {
   role: string;
+  landingPageUrl?: string | null;
 }
 
 const staffNavItems = [
@@ -47,7 +49,7 @@ const adminOnlyItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar({ role, landingPageUrl }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems = role === "ADMIN" ? [...staffNavItems, ...adminOnlyItems] : staffNavItems;
@@ -95,6 +97,20 @@ export function Sidebar({ role }: SidebarProps) {
               >
                 <Zap className="h-5 w-5 flex-shrink-0" />
                 Drip Engine
+                <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
+              </a>
+            </li>
+          )}
+          {landingPageUrl && (
+            <li>
+              <a
+                href={landingPageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              >
+                <Globe className="h-5 w-5 flex-shrink-0" />
+                Website Access
                 <ExternalLink className="h-3 w-3 ml-auto text-gray-400" />
               </a>
             </li>
