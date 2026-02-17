@@ -112,125 +112,143 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Lead Pipeline Summary */}
-        <div className="lg:col-span-1 rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between mb-4">
+        {/* Lead Pipeline — Detailed */}
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-semibold text-gray-900">Lead Pipeline</h2>
             <Link href="/leads/pipeline" className="text-xs text-blue-600 hover:underline">
-              View all
+              View pipeline board
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {LEAD_STATUS_OPTIONS.map((status) => {
               const count = statusCounts[status.value] || 0;
               const pct = totalLeads > 0 ? (count / totalLeads) * 100 : 0;
+              const barColor: Record<string, string> = {
+                NEW_LEAD: "bg-blue-500",
+                CONTACTED: "bg-yellow-500",
+                QUOTED: "bg-purple-500",
+                APPLICATION_SENT: "bg-indigo-500",
+                ENROLLED: "bg-green-500",
+                LOST: "bg-red-400",
+              };
               return (
-                <Link key={status.value} href={`/leads?status=${status.value}`} className="block hover:bg-gray-50 -mx-2 px-2 py-1 rounded-lg transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-600">{status.label}</span>
-                    <span className="text-xs text-gray-500">{count}</span>
+                <Link key={status.value} href={`/leads?status=${status.value}`} className="block hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("inline-block h-2.5 w-2.5 rounded-full", barColor[status.value] || "bg-gray-400")} />
+                      <span className="text-sm font-medium text-gray-700">{status.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-900">{count}</span>
+                      <span className="text-xs text-gray-400 w-12 text-right">{pct.toFixed(0)}%</span>
+                    </div>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-blue-500 transition-all"
-                      style={{ width: `${pct}%` }}
+                      className={cn("h-full rounded-full transition-all", barColor[status.value] || "bg-gray-400")}
+                      style={{ width: `${Math.max(pct, 1)}%` }}
                     />
                   </div>
                 </Link>
               );
             })}
           </div>
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <span>{totalLeads} total leads</span>
+            <span>{enrolledCount} enrolled ({conversionRate}% rate)</span>
+          </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6">
+        {/* My Upcoming Tasks */}
+        <div className="lg:col-span-1 rounded-xl border border-gray-200 bg-white p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-900">Recent Activity</h2>
-            <Link href="/leads" className="text-xs text-blue-600 hover:underline">
-              View all leads
+            <h2 className="text-sm font-semibold text-gray-900">My Upcoming Tasks</h2>
+            <Link href="/tasks" className="text-xs text-blue-600 hover:underline">
+              View all
             </Link>
           </div>
-          {recentActivities.length > 0 ? (
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3 text-sm">
-                  <Clock className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-700 truncate">{activity.description}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {activity.performedBy.name} &middot;{" "}
-                      {formatRelativeTime(activity.createdAt)}
-                    </p>
+          {upcomingTasks.length > 0 ? (
+            <div className="space-y-2">
+              {upcomingTasks.map((task) => {
+                const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+                return (
+                  <div key={task.id} className="flex items-center gap-3 rounded-lg border border-gray-100 p-3">
+                    <CheckSquare className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {task.dueDate && (
+                          <span className={cn(
+                            "inline-flex items-center gap-1 text-xs",
+                            isOverdue ? "text-red-600" : "text-gray-500"
+                          )}>
+                            {isOverdue && <AlertCircle className="h-3 w-3" />}
+                            <Calendar className="h-3 w-3" />
+                            {new Date(task.dueDate).toLocaleDateString()}
+                          </span>
+                        )}
+                        {task.lead && (
+                          <Link
+                            href={`/leads/${task.lead.id}`}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            {task.lead.firstName} {task.lead.lastName}
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {activity.lead && (
-                    <Link
-                      href={`/leads/${activity.lead.id}`}
-                      className="text-xs text-blue-600 hover:underline flex-shrink-0"
-                    >
-                      {activity.lead.firstName} {activity.lead.lastName}
-                    </Link>
-                  )}
-                  {activity.ticket && (
-                    <Link
-                      href={`/tickets/${activity.ticket.id}`}
-                      className="text-xs text-blue-600 hover:underline flex-shrink-0"
-                    >
-                      {activity.ticket.subject}
-                    </Link>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No activity yet. Start by adding leads or creating tickets.</p>
+            <p className="text-sm text-gray-500">No upcoming tasks. You&apos;re all caught up!</p>
           )}
         </div>
       </div>
 
-      {/* My Upcoming Tasks */}
+      {/* Recent Activity */}
       <div className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-900">My Upcoming Tasks</h2>
-          <Link href="/tasks" className="text-xs text-blue-600 hover:underline">
-            View all
+          <h2 className="text-sm font-semibold text-gray-900">Recent Activity</h2>
+          <Link href="/leads" className="text-xs text-blue-600 hover:underline">
+            View all leads
           </Link>
         </div>
-        {upcomingTasks.length > 0 ? (
-          <div className="space-y-2">
-            {upcomingTasks.map((task) => {
-              const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
-              return (
-                <div key={task.id} className="flex items-center gap-3 rounded-lg border border-gray-100 p-3">
-                  <CheckSquare className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {task.dueDate && (
-                        <span className={cn(
-                          "inline-flex items-center gap-1 text-xs",
-                          isOverdue ? "text-red-600" : "text-gray-500"
-                        )}>
-                          {isOverdue && <AlertCircle className="h-3 w-3" />}
-                          <Calendar className="h-3 w-3" />
-                          {new Date(task.dueDate).toLocaleDateString()}
-                        </span>
-                      )}
-                      {task.lead && (
-                        <Link
-                          href={`/leads/${task.lead.id}`}
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          {task.lead.firstName} {task.lead.lastName}
-                        </Link>
-                      )}
-                    </div>
-                  </div>
+        {recentActivities.length > 0 ? (
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3 text-sm">
+                <Clock className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-700 truncate">{activity.description}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {activity.performedBy.name} &middot;{" "}
+                    {formatRelativeTime(activity.createdAt)}
+                  </p>
                 </div>
-              );
-            })}
+                {activity.lead && (
+                  <Link
+                    href={`/leads/${activity.lead.id}`}
+                    className="text-xs text-blue-600 hover:underline flex-shrink-0"
+                  >
+                    {activity.lead.firstName} {activity.lead.lastName}
+                  </Link>
+                )}
+                {activity.ticket && (
+                  <Link
+                    href={`/tickets/${activity.ticket.id}`}
+                    className="text-xs text-blue-600 hover:underline flex-shrink-0"
+                  >
+                    {activity.ticket.subject}
+                  </Link>
+                )}
+              </div>
+            ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">No upcoming tasks. You&apos;re all caught up!</p>
+          <p className="text-sm text-gray-500">No activity yet. Start by adding leads or creating tickets.</p>
         )}
       </div>
 
