@@ -36,7 +36,7 @@ export function LandingPageForm({ currentUrl }: LandingPageFormProps) {
         </label>
         <input
           id="landingPageUrl"
-          type="url"
+          type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://yourdomain.com"
