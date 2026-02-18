@@ -60,12 +60,14 @@ interface ContactDetailProps {
 const ACTIVITY_ICONS: Record<string, typeof Phone> = {
   CALL: PhoneCall,
   EMAIL: Mail,
+  SMS: MessageSquare,
   NOTE: FileText,
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
   CALL: "text-green-600 bg-green-50",
   EMAIL: "text-purple-600 bg-purple-50",
+  SMS: "text-blue-600 bg-blue-50",
   NOTE: "text-gray-600 bg-gray-50",
 };
 
@@ -88,11 +90,12 @@ export function ContactDetail({ contact }: ContactDetailProps) {
     const typeLabels: Record<string, string> = {
       CALL: "Call",
       EMAIL: "Email",
+      SMS: "Text",
       NOTE: "Note",
     };
 
     await logActivity({
-      type: activityType as "CALL" | "EMAIL" | "NOTE",
+      type: activityType as "CALL" | "EMAIL" | "SMS" | "NOTE",
       description: `${typeLabels[activityType]}: ${activityContent}`,
       contactId: contact.id,
       metadata: {
@@ -179,29 +182,56 @@ export function ContactDetail({ contact }: ContactDetailProps) {
               <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
                 {contact.phone && (
                   <>
-                    <a
-                      href={`tel:${contact.phone}`}
+                    <button
+                      onClick={async () => {
+                        await logActivity({
+                          type: "CALL",
+                          description: `Called ${contact.firstName} ${contact.lastName} at ${contact.phone}`,
+                          contactId: contact.id,
+                          metadata: { phone: contact.phone },
+                        });
+                        router.refresh();
+                        window.open(`tel:${contact.phone}`, "_self");
+                      }}
                       className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
                     >
                       <PhoneCall className="h-4 w-4" />
                       Call
-                    </a>
-                    <a
-                      href={`sms:${contact.phone}`}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await logActivity({
+                          type: "SMS",
+                          description: `Sent text to ${contact.firstName} ${contact.lastName} at ${contact.phone}`,
+                          contactId: contact.id,
+                          metadata: { phone: contact.phone },
+                        });
+                        router.refresh();
+                        window.open(`sms:${contact.phone}`, "_self");
+                      }}
                       className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
                     >
                       <MessageSquare className="h-4 w-4" />
                       Text
-                    </a>
+                    </button>
                   </>
                 )}
-                <a
-                  href={`mailto:${contact.email}`}
+                <button
+                  onClick={async () => {
+                    await logActivity({
+                      type: "EMAIL",
+                      description: `Sent email to ${contact.firstName} ${contact.lastName} at ${contact.email}`,
+                      contactId: contact.id,
+                      metadata: { email: contact.email },
+                    });
+                    router.refresh();
+                    window.open(`mailto:${contact.email}`, "_self");
+                  }}
                   className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
                 >
                   <Mail className="h-4 w-4" />
                   Email
-                </a>
+                </button>
                 <Link
                   href={`/tickets/new?contactId=${contact.id}`}
                   className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
@@ -297,6 +327,7 @@ export function ContactDetail({ contact }: ContactDetailProps) {
                 >
                   <option value="CALL">Call</option>
                   <option value="EMAIL">Email</option>
+                  <option value="SMS">Text/SMS</option>
                   <option value="NOTE">Note</option>
                 </select>
               </div>

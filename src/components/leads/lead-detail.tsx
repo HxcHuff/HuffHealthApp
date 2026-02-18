@@ -112,6 +112,7 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
       metadata: { phone: lead.phone },
     });
     router.refresh();
+    window.open(`tel:${lead.phone}`, "_self");
     setShowCallModal(true);
   }
 
@@ -137,13 +138,12 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
   async function handleSendText() {
     if (!textMessage.trim()) return;
     await logActivity({
-      type: "CALL",
+      type: "SMS",
       description: `Sent text to ${lead.firstName} ${lead.lastName} at ${lead.phone}: "${textMessage}"`,
       leadId: lead.id,
       metadata: {
         phone: lead.phone,
         message: textMessage,
-        type: "sms",
       },
     });
     router.refresh();
@@ -217,14 +217,13 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
               <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
                 {lead.phone && (
                   <>
-                    <a
-                      href={`tel:${lead.phone}`}
+                    <button
                       onClick={handleCall}
                       className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
                     >
                       <PhoneCall className="h-4 w-4" />
                       Call
-                    </a>
+                    </button>
                     <button
                       onClick={() => setShowTextModal(true)}
                       className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
