@@ -43,7 +43,7 @@ export default function ImportClientsPage() {
         parsed = parseCSVContent(text);
       } else {
         const buffer = await file.arrayBuffer();
-        parsed = parseExcelBuffer(buffer);
+        parsed = await parseExcelBuffer(buffer);
       }
 
       if (parsed.headers.length === 0) {
