@@ -70,7 +70,14 @@ export type LeadMappableField =
   | "city"
   | "state"
   | "zipCode"
-  | "price";
+  | "price"
+  | "insuranceType"
+  | "planType"
+  | "policyStatus"
+  | "policyRenewalDate"
+  | "lastReviewDate"
+  | "followUpDate"
+  | "lifeEvent";
 
 export interface FieldMapping {
   csvColumn: string;
@@ -98,6 +105,13 @@ export const LEAD_FIELD_OPTIONS: { value: LeadMappableField | "skip"; label: str
   { value: "jobTitle", label: "Job Title" },
   { value: "source", label: "Source" },
   { value: "notes", label: "Notes" },
+  { value: "insuranceType", label: "Insurance Type" },
+  { value: "planType", label: "Plan Type" },
+  { value: "policyStatus", label: "Policy Status" },
+  { value: "policyRenewalDate", label: "Policy Renewal Date" },
+  { value: "lastReviewDate", label: "Last Review Date" },
+  { value: "followUpDate", label: "Follow-Up Date" },
+  { value: "lifeEvent", label: "Life Event" },
 ];
 
 const HEADER_ALIASES: Record<LeadMappableField, string[]> = {
@@ -120,6 +134,13 @@ const HEADER_ALIASES: Record<LeadMappableField, string[]> = {
   state: ["state", "province", "region"],
   zipCode: ["zip_code", "zipcode", "zip code", "zip", "postal_code", "postalcode", "postal code"],
   price: ["price", "amount", "cost", "total", "value"],
+  insuranceType: ["insurance_type", "insurancetype", "insurance type", "insurance", "coverage_type", "coverage type"],
+  planType: ["plan_type", "plantype", "plan type", "plan", "plan_name", "plan name"],
+  policyStatus: ["policy_status", "policystatus", "policy status"],
+  policyRenewalDate: ["policy_renewal_date", "renewal_date", "renewaldate", "renewal date", "policy renewal date"],
+  lastReviewDate: ["last_review_date", "lastreviewdate", "last review date", "review_date", "review date"],
+  followUpDate: ["follow_up_date", "followupdate", "follow up date", "followup_date", "follow-up date"],
+  lifeEvent: ["life_event", "lifeevent", "life event", "qualifying_event", "qualifying event"],
 };
 
 export function autoDetectMapping(headers: string[]): FieldMapping[] {

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import type { FieldMapping, ImportResult } from "@/lib/csv-parser";
+import type { InsuranceType, PolicyStatus } from "@/generated/prisma/client";
+
+const VALID_INSURANCE_TYPES: InsuranceType[] = ["ACA", "MEDICARE_SUPPLEMENT", "MEDICARE_ADVANTAGE", "PART_D", "GROUP", "SHORT_TERM", "DENTAL_VISION", "LIFE", "OTHER"];
+const VALID_POLICY_STATUSES: PolicyStatus[] = ["ACTIVE", "GRACE_PERIOD", "LAPSED", "CANCELLED", "PENDING"];
 
 export const maxDuration = 25; // Netlify Pro allows up to 26s
 
@@ -96,6 +100,13 @@ export async function POST(request: NextRequest) {
       state?: string;
       zipCode?: string;
       price?: string;
+      insuranceType?: InsuranceType;
+      planType?: string;
+      policyStatus?: PolicyStatus;
+      policyRenewalDate?: Date;
+      lastReviewDate?: Date;
+      followUpDate?: Date;
+      lifeEvent?: string;
       customFields?: object;
       createdById: string;
       leadListId: string;
@@ -139,6 +150,21 @@ export async function POST(request: NextRequest) {
       if (!lead.firstName) lead.firstName = "Unknown";
       if (!lead.lastName) lead.lastName = "Unknown";
 
+      // Parse insurance type (normalize to enum value)
+      const rawInsuranceType = lead.insuranceType?.toUpperCase().replace(/[\s/]+/g, "_");
+      const insuranceType = VALID_INSURANCE_TYPES.find(t => t === rawInsuranceType) || undefined;
+
+      // Parse policy status (normalize to enum value)
+      const rawPolicyStatus = lead.policyStatus?.toUpperCase().replace(/[\s]+/g, "_");
+      const policyStatus = VALID_POLICY_STATUSES.find(s => s === rawPolicyStatus) || undefined;
+
+      // Parse dates
+      const parseDate = (val?: string): Date | undefined => {
+        if (!val) return undefined;
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? undefined : d;
+      };
+
       leadsToCreate.push({
         firstName: lead.firstName,
         lastName: lead.lastName,
@@ -159,6 +185,13 @@ export async function POST(request: NextRequest) {
         state: lead.state || undefined,
         zipCode: lead.zipCode || undefined,
         price: lead.price || undefined,
+        insuranceType,
+        planType: lead.planType || undefined,
+        policyStatus,
+        policyRenewalDate: parseDate(lead.policyRenewalDate),
+        lastReviewDate: parseDate(lead.lastReviewDate),
+        followUpDate: parseDate(lead.followUpDate),
+        lifeEvent: lead.lifeEvent || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         ...(initialStatus === "ENROLLED" ? { status: "ENROLLED" as const } : {}),
         createdById: session.user.id,

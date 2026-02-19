@@ -27,6 +27,10 @@ import {
   AlertCircle,
   UserPlus,
   CheckSquare,
+  Shield,
+  RefreshCw,
+  CalendarCheck,
+  HeartPulse,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -52,6 +56,13 @@ interface LeadDetailProps {
     state: string | null;
     zipCode: string | null;
     price: string | null;
+    insuranceType: string | null;
+    planType: string | null;
+    policyStatus: string | null;
+    policyRenewalDate: string | Date | null;
+    lastReviewDate: string | Date | null;
+    followUpDate: string | Date | null;
+    lifeEvent: string | null;
     createdAt: string | Date;
     updatedAt: string | Date;
     assignedTo: { id: string; name: string } | null;
@@ -309,6 +320,56 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
                     <span className="text-gray-600">Dispute: {lead.disputeStatus}</span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {(lead.insuranceType || lead.planType || lead.policyStatus || lead.policyRenewalDate || lead.lastReviewDate || lead.followUpDate || lead.lifeEvent) && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-sm font-medium text-gray-700 mb-2">Insurance & Policy</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {lead.insuranceType && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <HeartPulse className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Type: {lead.insuranceType.replace(/_/g, " ")}</span>
+                    </div>
+                  )}
+                  {lead.planType && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Shield className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Plan: {lead.planType}</span>
+                    </div>
+                  )}
+                  {lead.policyStatus && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Shield className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Policy: {lead.policyStatus.replace(/_/g, " ")}</span>
+                    </div>
+                  )}
+                  {lead.policyRenewalDate && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <RefreshCw className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Renewal: {formatDate(lead.policyRenewalDate)}</span>
+                    </div>
+                  )}
+                  {lead.lastReviewDate && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CalendarCheck className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Last Review: {formatDate(lead.lastReviewDate)}</span>
+                    </div>
+                  )}
+                  {lead.followUpDate && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Follow-Up: {formatDate(lead.followUpDate)}</span>
+                    </div>
+                  )}
+                  {lead.lifeEvent && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <AlertCircle className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Life Event: {lead.lifeEvent}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
