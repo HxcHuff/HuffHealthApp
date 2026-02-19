@@ -47,3 +47,11 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Claude Code
+.claude/
+
+# Drizzle/Deno artifacts
+/db/
+deno.lock
+drizzle.config.ts
