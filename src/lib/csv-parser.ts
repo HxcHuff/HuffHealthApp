@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export interface ParsedFile {
   headers: string[];
@@ -20,18 +20,35 @@ export function parseCSVContent(content: string): ParsedFile {
   };
 }
 
-export function parseExcelBuffer(buffer: ArrayBuffer): ParsedFile {
-  const workbook = XLSX.read(buffer, { type: "array" });
-  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-  const jsonData = XLSX.utils.sheet_to_json<Record<string, string>>(firstSheet, {
-    defval: "",
+export async function parseExcelBuffer(buffer: ArrayBuffer): Promise<ParsedFile> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+  const firstSheet = workbook.worksheets[0];
+  if (!firstSheet || firstSheet.rowCount === 0) {
+    return { headers: [], rows: [], totalRows: 0 };
+  }
+
+  const headerRow = firstSheet.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell((cell, colNumber) => {
+    headers[colNumber - 1] = String(cell.value ?? "").trim();
   });
-  const headers = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
-  return {
-    headers,
-    rows: jsonData,
-    totalRows: jsonData.length,
-  };
+
+  const rows: Record<string, string>[] = [];
+  for (let i = 2; i <= firstSheet.rowCount; i++) {
+    const row = firstSheet.getRow(i);
+    const record: Record<string, string> = {};
+    let hasValue = false;
+    headers.forEach((header, index) => {
+      const cell = row.getCell(index + 1);
+      const value = cell.value == null ? "" : String(cell.value);
+      record[header] = value;
+      if (value) hasValue = true;
+    });
+    if (hasValue) rows.push(record);
+  }
+
+  return { headers, rows, totalRows: rows.length };
 }
 
 export type LeadMappableField =
