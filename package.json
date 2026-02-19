@@ -57,5 +57,11 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "lodash": "4.17.23",
+    "hono": "4.11.10",
+    "minimatch": "10.2.1",
+    "esbuild": "0.27.3"
   }
 }
