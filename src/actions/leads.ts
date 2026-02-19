@@ -146,8 +146,8 @@ export async function deleteLead(id: string) {
 function parseDateOfBirth(dob: string): Date | null {
   // Handle YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(dob)) return new Date(dob + "T00:00:00");
-  // Handle M/D/YYYY or MM/DD/YYYY
-  const slashMatch = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  // Handle M/D/YYYY or MM/DD/YYYY (with optional time suffix like " 12:00:00 AM")
+  const slashMatch = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (slashMatch) return new Date(+slashMatch[3], +slashMatch[1] - 1, +slashMatch[2]);
   // Handle M-D-YYYY or MM-DD-YYYY
   const dashMatch = dob.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
