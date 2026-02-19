@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { updateLead, deleteLead } from "@/actions/leads";
 import { logActivity } from "@/actions/activities";
@@ -31,6 +31,8 @@ import {
   RefreshCw,
   CalendarCheck,
   HeartPulse,
+  ChevronUp,
+  Minus,
 } from "lucide-react";
 
 interface LeadDetailProps {
@@ -99,7 +101,27 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
   const [callNotes, setCallNotes] = useState("");
   const [callDuration, setCallDuration] = useState("");
   const [textMessage, setTextMessage] = useState("");
+  const [callStartTime, setCallStartTime] = useState<Date | null>(null);
+  const [callElapsed, setCallElapsed] = useState("0:00");
+  const [callExpanded, setCallExpanded] = useState(true);
   const smsLinkRef = useRef<HTMLAnchorElement>(null);
+
+  // Live call timer
+  useEffect(() => {
+    if (!showCallModal || !callStartTime) return;
+    const id = setInterval(() => {
+      const diff = Math.floor((Date.now() - callStartTime.getTime()) / 1000);
+      const m = Math.floor(diff / 60);
+      const s = diff % 60;
+      setCallElapsed(`${m}:${s.toString().padStart(2, "0")}`);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [showCallModal, callStartTime]);
+
+  const getElapsedMinutes = useCallback(() => {
+    if (!callStartTime) return "";
+    return Math.ceil((Date.now() - callStartTime.getTime()) / 60000).toString();
+  }, [callStartTime]);
 
   // Local state for editable insurance/policy fields
   const [fieldValues, setFieldValues] = useState({
@@ -157,24 +179,29 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
     });
     router.refresh();
     window.open(`tel:${lead.phone}`, "_self");
+    setCallStartTime(new Date());
+    setCallElapsed("0:00");
+    setCallExpanded(true);
     setShowCallModal(true);
   }
 
   async function handleSaveCallNotes() {
-    if (callNotes.trim() || callDuration.trim()) {
+    const duration = callDuration.trim() || getElapsedMinutes();
+    if (callNotes.trim() || duration) {
       await logActivity({
         type: "NOTE",
-        description: `Call notes for ${lead.firstName} ${lead.lastName}${callDuration ? ` (${callDuration} min)` : ""}: ${callNotes || "No notes"}`,
+        description: `Call notes for ${lead.firstName} ${lead.lastName}${duration ? ` (${duration} min)` : ""}: ${callNotes || "No notes"}`,
         leadId: lead.id,
         metadata: {
           phone: lead.phone,
-          duration: callDuration || null,
+          duration: duration || null,
           notes: callNotes || null,
         },
       });
     }
     setCallNotes("");
     setCallDuration("");
+    setCallStartTime(null);
     setShowCallModal(false);
     router.refresh();
   }
@@ -675,63 +702,91 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
         </div>
       </div>
 
-      {/* Call Notes Modal */}
+      {/* Floating Call Bubble */}
       {showCallModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Log Call Notes</h3>
-              <button
-                onClick={() => { setShowCallModal(false); setCallNotes(""); setCallDuration(""); }}
-                className="rounded-lg p-1 hover:bg-gray-100 transition-colors"
-              >
-                <X className="h-5 w-5 text-gray-400" />
-              </button>
-            </div>
-            <p className="text-sm text-gray-500 mb-4">
-              Call to {lead.firstName} {lead.lastName} at {lead.phone}
-            </p>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Duration (minutes)
-                </label>
-                <input
-                  type="text"
-                  value={callDuration}
-                  onChange={(e) => setCallDuration(e.target.value)}
-                  placeholder="e.g. 5"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+        <div className="fixed bottom-4 right-4 z-50 w-80 shadow-2xl rounded-xl border border-gray-200 bg-white overflow-hidden">
+          {callExpanded ? (
+            <>
+              {/* Expanded header */}
+              <div className="flex items-center justify-between bg-green-600 px-4 py-2.5 text-white">
+                <div className="flex items-center gap-2 text-sm font-medium min-w-0">
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span className="truncate">On Call with {lead.firstName} {lead.lastName}</span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => setCallExpanded(false)}
+                    className="rounded p-1 hover:bg-green-700 transition-colors"
+                    title="Minimize"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => { setShowCallModal(false); setCallNotes(""); setCallDuration(""); setCallStartTime(null); }}
+                    className="rounded p-1 hover:bg-green-700 transition-colors"
+                    title="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </label>
-                <textarea
-                  value={callNotes}
-                  onChange={(e) => setCallNotes(e.target.value)}
-                  rows={4}
-                  placeholder="What was discussed..."
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+              {/* Expanded body */}
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="font-mono font-medium">{callElapsed}</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Duration (min)
+                  </label>
+                  <input
+                    type="text"
+                    value={callDuration}
+                    onChange={(e) => setCallDuration(e.target.value)}
+                    placeholder={`Auto: ~${getElapsedMinutes() || "0"} min`}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={callNotes}
+                    onChange={(e) => setCallNotes(e.target.value)}
+                    rows={3}
+                    placeholder="What was discussed..."
+                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    onClick={() => { setShowCallModal(false); setCallNotes(""); setCallDuration(""); setCallStartTime(null); }}
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    End Call
+                  </button>
+                  <button
+                    onClick={handleSaveCallNotes}
+                    className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Save Notes
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                onClick={() => { setShowCallModal(false); setCallNotes(""); setCallDuration(""); }}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Skip
-              </button>
-              <button
-                onClick={handleSaveCallNotes}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-              >
-                Save Notes
-              </button>
-            </div>
-          </div>
+            </>
+          ) : (
+            /* Collapsed pill */
+            <button
+              onClick={() => setCallExpanded(true)}
+              className="flex w-full items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+            >
+              <Phone className="h-4 w-4 text-green-600 shrink-0" />
+              <span className="text-sm font-medium text-gray-700 truncate">On call — {callElapsed}</span>
+              <ChevronUp className="h-4 w-4 text-gray-400 ml-auto shrink-0" />
+            </button>
+          )}
         </div>
       )}
 
