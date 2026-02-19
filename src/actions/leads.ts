@@ -24,6 +24,15 @@ export async function createLead(formData: FormData) {
     source: formData.get("source") as string,
     notes: formData.get("notes") as string,
     assignedToId: formData.get("assignedToId") as string || undefined,
+    dateOfBirth: formData.get("dateOfBirth") as string || undefined,
+    zipCode: formData.get("zipCode") as string || undefined,
+    insuranceType: formData.get("insuranceType") as string || undefined,
+    planType: formData.get("planType") as string || undefined,
+    policyStatus: formData.get("policyStatus") as string || undefined,
+    policyRenewalDate: formData.get("policyRenewalDate") as string || undefined,
+    lastReviewDate: formData.get("lastReviewDate") as string || undefined,
+    followUpDate: formData.get("followUpDate") as string || undefined,
+    lifeEvent: formData.get("lifeEvent") as string || undefined,
   };
 
   const validated = CreateLeadSchema.safeParse(raw);
@@ -36,6 +45,9 @@ export async function createLead(formData: FormData) {
       ...validated.data,
       email: validated.data.email || null,
       createdById: session.user.id,
+      policyRenewalDate: validated.data.policyRenewalDate ? new Date(validated.data.policyRenewalDate) : null,
+      lastReviewDate: validated.data.lastReviewDate ? new Date(validated.data.lastReviewDate) : null,
+      followUpDate: validated.data.followUpDate ? new Date(validated.data.followUpDate) : null,
     },
   });
 
@@ -155,42 +167,55 @@ function buildActionFilter(filter?: string, ageFilter?: string): Record<string, 
 
   if (!filter) return where;
 
+  const days = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
+
   switch (filter) {
     case "birthdayThisMonth":
       where.dateOfBirth = { not: null };
       break;
     case "aep":
-      where.status = { in: ["QUOTED", "APPLICATION_SENT"] };
+      // Annual Enrollment Period - Medicare clients
+      where.insuranceType = { in: ["MEDICARE_SUPPLEMENT", "MEDICARE_ADVANTAGE", "PART_D"] };
+      where.policyStatus = { in: ["ACTIVE", "PENDING"] };
       break;
     case "oep":
+      // Open Enrollment Period - ACA marketplace clients
+      where.insuranceType = "ACA";
+      break;
     case "maoep":
-      where.status = "ENROLLED";
+      // Medicare Advantage Open Enrollment Period
+      where.insuranceType = "MEDICARE_ADVANTAGE";
+      where.policyStatus = "ACTIVE";
       break;
     case "sep":
-      where.status = { in: ["NEW_LEAD", "CONTACTED"] };
-      where.stageEnteredAt = { gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) };
+      // Special Enrollment - leads with life events
+      where.lifeEvent = { not: null };
       break;
     case "renewalSoon":
-      where.status = "ENROLLED";
-      where.stageEnteredAt = { lte: new Date(now.getTime() - 11 * 30 * 24 * 60 * 60 * 1000) };
+      // Policies renewing within 60 days
+      where.policyRenewalDate = {
+        gte: now,
+        lte: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
+      };
+      where.policyStatus = "ACTIVE";
       break;
     case "gracePeriod":
-      where.status = "ENROLLED";
-      where.stageEnteredAt = {
-        gte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
-        lte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-      };
+      where.policyStatus = "GRACE_PERIOD";
       break;
     case "lapsed":
-      where.status = "LOST";
+      where.policyStatus = "LAPSED";
       break;
     case "annualReview":
-      where.status = "ENROLLED";
-      where.stageEnteredAt = { lte: new Date(now.getTime() - 10 * 30 * 24 * 60 * 60 * 1000) };
+      // Last review was over 10 months ago or never
+      where.policyStatus = "ACTIVE";
+      where.OR = [
+        { lastReviewDate: null },
+        { lastReviewDate: { lte: days(300) } },
+      ];
       break;
     case "followUpDue":
-      where.status = "CONTACTED";
-      where.stageEnteredAt = { lte: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) };
+      // Follow-up date is today or past
+      where.followUpDate = { lte: now };
       break;
     case "openQuotes":
       where.status = "QUOTED";
@@ -201,8 +226,11 @@ function buildActionFilter(filter?: string, ageFilter?: string): Record<string, 
       break;
     }
     case "overdue":
-      where.status = { in: ["CONTACTED", "QUOTED"] };
-      where.stageEnteredAt = { lte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) };
+      // Follow-up is overdue (past due by 1+ days) or stuck in stage 7+ days
+      where.OR = [
+        { followUpDate: { lt: days(0) } },
+        { status: { in: ["CONTACTED", "QUOTED"] }, stageEnteredAt: { lte: days(7) } },
+      ];
       break;
   }
 

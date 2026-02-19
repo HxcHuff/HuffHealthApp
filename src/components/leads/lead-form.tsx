@@ -90,6 +90,14 @@ export function LeadForm({ staffUsers, leadSources }: LeadFormProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+          <input
+            name="dateOfBirth"
+            type="date"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
           <input
             name="zipCode"
@@ -97,6 +105,9 @@ export function LeadForm({ staffUsers, leadSources }: LeadFormProps) {
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
           <select
@@ -109,9 +120,6 @@ export function LeadForm({ staffUsers, leadSources }: LeadFormProps) {
             ))}
           </select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
           <select
@@ -123,6 +131,79 @@ export function LeadForm({ staffUsers, leadSources }: LeadFormProps) {
               <option key={user.id} value={user.id}>{user.name}</option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Insurance Type</label>
+          <select
+            name="insuranceType"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">Select type...</option>
+            <option value="ACA">ACA / Marketplace</option>
+            <option value="MEDICARE_SUPPLEMENT">Medicare Supplement</option>
+            <option value="MEDICARE_ADVANTAGE">Medicare Advantage</option>
+            <option value="PART_D">Part D</option>
+            <option value="GROUP">Group</option>
+            <option value="SHORT_TERM">Short-Term</option>
+            <option value="DENTAL_VISION">Dental / Vision</option>
+            <option value="LIFE">Life</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Plan Type</label>
+          <input
+            name="planType"
+            placeholder="e.g. Plan G, AARP, Blue Cross"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Policy Status</label>
+          <select
+            name="policyStatus"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">No policy yet</option>
+            <option value="PENDING">Pending</option>
+            <option value="ACTIVE">Active</option>
+            <option value="GRACE_PERIOD">Grace Period</option>
+            <option value="LAPSED">Lapsed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Policy Renewal Date</label>
+          <input
+            name="policyRenewalDate"
+            type="date"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Follow-Up Date</label>
+          <input
+            name="followUpDate"
+            type="date"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Life Event (SEP)</label>
+          <input
+            name="lifeEvent"
+            placeholder="e.g. Job loss, Marriage, Moved"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
         </div>
       </div>
 

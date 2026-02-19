@@ -21,6 +21,13 @@ export const CreateLeadSchema = z.object({
   state: z.string().optional(),
   zipCode: z.string().optional(),
   price: z.string().optional(),
+  insuranceType: z.enum(["ACA", "MEDICARE_SUPPLEMENT", "MEDICARE_ADVANTAGE", "PART_D", "GROUP", "SHORT_TERM", "DENTAL_VISION", "LIFE", "OTHER"]).optional(),
+  planType: z.string().optional(),
+  policyStatus: z.enum(["ACTIVE", "GRACE_PERIOD", "LAPSED", "CANCELLED", "PENDING"]).optional(),
+  policyRenewalDate: z.string().optional(),
+  lastReviewDate: z.string().optional(),
+  followUpDate: z.string().optional(),
+  lifeEvent: z.string().optional(),
 });
 
 export const UpdateLeadSchema = z.object({
@@ -45,6 +52,13 @@ export const UpdateLeadSchema = z.object({
   state: z.string().optional(),
   zipCode: z.string().optional(),
   price: z.string().optional(),
+  insuranceType: z.enum(["ACA", "MEDICARE_SUPPLEMENT", "MEDICARE_ADVANTAGE", "PART_D", "GROUP", "SHORT_TERM", "DENTAL_VISION", "LIFE", "OTHER"]).optional().nullable(),
+  planType: z.string().optional(),
+  policyStatus: z.enum(["ACTIVE", "GRACE_PERIOD", "LAPSED", "CANCELLED", "PENDING"]).optional().nullable(),
+  policyRenewalDate: z.string().optional(),
+  lastReviewDate: z.string().optional(),
+  followUpDate: z.string().optional(),
+  lifeEvent: z.string().optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof CreateLeadSchema>;
