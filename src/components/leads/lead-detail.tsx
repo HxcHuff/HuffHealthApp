@@ -85,6 +85,12 @@ interface LeadDetailProps {
   staffUsers: { id: string; name: string }[];
 }
 
+function toDateInputValue(val: string | Date | null): string {
+  if (!val) return "";
+  const d = typeof val === "string" ? val : val.toISOString();
+  return d.slice(0, 10);
+}
+
 export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
@@ -94,6 +100,33 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
   const [callDuration, setCallDuration] = useState("");
   const [textMessage, setTextMessage] = useState("");
   const smsLinkRef = useRef<HTMLAnchorElement>(null);
+
+  // Local state for editable insurance/policy fields
+  const [fieldValues, setFieldValues] = useState({
+    dateOfBirth: lead.dateOfBirth || "",
+    insuranceType: lead.insuranceType || "",
+    planType: lead.planType || "",
+    policyStatus: lead.policyStatus || "",
+    policyRenewalDate: toDateInputValue(lead.policyRenewalDate),
+    lastReviewDate: toDateInputValue(lead.lastReviewDate),
+    followUpDate: toDateInputValue(lead.followUpDate),
+    lifeEvent: lead.lifeEvent || "",
+  });
+
+  function handleFieldChange(field: string, value: string) {
+    setFieldValues((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleFieldUpdate(field: string, value: string) {
+    setUpdating(true);
+    const dateFields = ["policyRenewalDate", "lastReviewDate", "followUpDate"];
+    const submitValue = dateFields.includes(field) && value
+      ? new Date(value + "T00:00:00").toISOString()
+      : value || null;
+    await updateLead(lead.id, { [field]: submitValue });
+    setUpdating(false);
+    router.refresh();
+  }
 
   async function handleStatusChange(status: string) {
     setUpdating(true);
@@ -472,6 +505,149 @@ export function LeadDetail({ lead, staffUsers }: LeadDetailProps) {
                 <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
+          </div>
+
+          {/* Insurance & Policy */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Insurance & Policy
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  value={fieldValues.dateOfBirth}
+                  onChange={(e) => handleFieldChange("dateOfBirth", e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== (lead.dateOfBirth || "")) {
+                      handleFieldUpdate("dateOfBirth", e.target.value);
+                    }
+                  }}
+                  disabled={updating}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Insurance Type</label>
+                <select
+                  value={fieldValues.insuranceType}
+                  onChange={(e) => {
+                    handleFieldChange("insuranceType", e.target.value);
+                    handleFieldUpdate("insuranceType", e.target.value);
+                  }}
+                  disabled={updating}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  <option value="">— None —</option>
+                  <option value="ACA">ACA</option>
+                  <option value="MEDICARE_SUPPLEMENT">Medicare Supplement</option>
+                  <option value="MEDICARE_ADVANTAGE">Medicare Advantage</option>
+                  <option value="PART_D">Part D</option>
+                  <option value="GROUP">Group</option>
+                  <option value="SHORT_TERM">Short-Term</option>
+                  <option value="DENTAL_VISION">Dental/Vision</option>
+                  <option value="LIFE">Life</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Plan Type</label>
+                <input
+                  type="text"
+                  value={fieldValues.planType}
+                  onChange={(e) => handleFieldChange("planType", e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== (lead.planType || "")) {
+                      handleFieldUpdate("planType", e.target.value);
+                    }
+                  }}
+                  disabled={updating}
+                  placeholder="e.g. Plan G"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Policy Status</label>
+                <select
+                  value={fieldValues.policyStatus}
+                  onChange={(e) => {
+                    handleFieldChange("policyStatus", e.target.value);
+                    handleFieldUpdate("policyStatus", e.target.value);
+                  }}
+                  disabled={updating}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  <option value="">— None —</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="GRACE_PERIOD">Grace Period</option>
+                  <option value="LAPSED">Lapsed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Policy Renewal Date</label>
+                <input
+                  type="date"
+                  value={fieldValues.policyRenewalDate}
+                  onChange={(e) => handleFieldChange("policyRenewalDate", e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== toDateInputValue(lead.policyRenewalDate)) {
+                      handleFieldUpdate("policyRenewalDate", e.target.value);
+                    }
+                  }}
+                  disabled={updating}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Last Review Date</label>
+                <input
+                  type="date"
+                  value={fieldValues.lastReviewDate}
+                  onChange={(e) => handleFieldChange("lastReviewDate", e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== toDateInputValue(lead.lastReviewDate)) {
+                      handleFieldUpdate("lastReviewDate", e.target.value);
+                    }
+                  }}
+                  disabled={updating}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Follow-Up Date</label>
+                <input
+                  type="date"
+                  value={fieldValues.followUpDate}
+                  onChange={(e) => handleFieldChange("followUpDate", e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== toDateInputValue(lead.followUpDate)) {
+                      handleFieldUpdate("followUpDate", e.target.value);
+                    }
+                  }}
+                  disabled={updating}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Life Event</label>
+                <input
+                  type="text"
+                  value={fieldValues.lifeEvent}
+                  onChange={(e) => handleFieldChange("lifeEvent", e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value !== (lead.lifeEvent || "")) {
+                      handleFieldUpdate("lifeEvent", e.target.value);
+                    }
+                  }}
+                  disabled={updating}
+                  placeholder="e.g. Job loss, Marriage"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                />
+              </div>
+            </div>
           </div>
 
           {lead.email && process.env.NEXT_PUBLIC_DRIP_ENGINE_URL && (
