@@ -20,6 +20,7 @@ import {
   Plus,
   TicketPlus,
   Globe,
+  UserCheck,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -34,12 +35,14 @@ const staffNavItems = [
   { href: "/tickets", label: "Tickets", icon: Ticket },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/contacts", label: "Contacts", icon: Contact },
+  { href: "/clients", label: "Clients", icon: UserCheck },
   { href: "/announcements", label: "Announcements", icon: Megaphone },
 ];
 
 const quickActionItems = [
   { href: "/leads?new=true", label: "Add Lead", icon: Plus },
   { href: "/leads/import", label: "Import Leads", icon: Upload },
+  { href: "/clients/import", label: "Import Clients", icon: Upload },
   { href: "/tickets/new", label: "Create Ticket", icon: TicketPlus },
   { href: "/actions", label: "Actions", icon: ClipboardList },
 ];

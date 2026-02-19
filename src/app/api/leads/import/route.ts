@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     batchNumber = 1,
     totalBatches = 1,
     totalRows,
+    initialStatus,
   } = body as {
     rows: Record<string, string>[];
     mappings: FieldMapping[];
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     batchNumber?: number;
     totalBatches?: number;
     totalRows?: number;
+    initialStatus?: string;
   };
 
   if (!rows || !mappings || !listName) {
@@ -158,6 +160,7 @@ export async function POST(request: NextRequest) {
         zipCode: lead.zipCode || undefined,
         price: lead.price || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+        ...(initialStatus === "ENROLLED" ? { status: "ENROLLED" as const } : {}),
         createdById: session.user.id,
         leadListId: listId,
       });
@@ -206,7 +209,7 @@ export async function POST(request: NextRequest) {
       await db.activity.create({
         data: {
           type: "LEAD_IMPORTED",
-          description: `Imported ${totalImported} leads from "${listName}"`,
+          description: `Imported ${totalImported} ${initialStatus === "ENROLLED" ? "clients" : "leads"} from "${listName}"`,
           performedById: session.user.id,
           metadata: {
             listId,

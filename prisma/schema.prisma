@@ -36,6 +36,26 @@ enum TicketPriority {
   URGENT
 }
 
+enum InsuranceType {
+  ACA
+  MEDICARE_SUPPLEMENT
+  MEDICARE_ADVANTAGE
+  PART_D
+  GROUP
+  SHORT_TERM
+  DENTAL_VISION
+  LIFE
+  OTHER
+}
+
+enum PolicyStatus {
+  ACTIVE
+  GRACE_PERIOD
+  LAPSED
+  CANCELLED
+  PENDING
+}
+
 enum ActivityType {
   NOTE
   STATUS_CHANGE
@@ -75,6 +95,8 @@ model User {
   leadLists              LeadList[]
   announcements          Announcement[]
   facebookIntegrations   FacebookIntegration[]
+  apiKeys                ApiKey[]               @relation("ApiKeys")
+  walletTransactions     ApiWalletTransaction[] @relation("WalletTransactions")
 
   @@index([email])
   @@index([role])
@@ -104,6 +126,13 @@ model Lead {
   state          String?
   zipCode        String?
   price          String?
+  insuranceType  InsuranceType?
+  planType       String?
+  policyStatus   PolicyStatus?
+  policyRenewalDate DateTime?
+  lastReviewDate DateTime?
+  followUpDate   DateTime?
+  lifeEvent      String?
   dripSyncedAt   DateTime?
 
   assignedToId String?
@@ -329,4 +358,42 @@ model Task {
   @@index([isCompleted])
   @@index([dueDate])
   @@index([leadId])
+}
+
+model ApiKey {
+  id           String    @id @default(cuid())
+  name         String
+  keyHash      String    @unique
+  encryptedKey String    @db.Text
+  prefix       String
+  lastUsedAt   DateTime?
+  isRevoked    Boolean   @default(false)
+  revokedAt    DateTime?
+  createdById  String
+  createdBy    User      @relation("ApiKeys", fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([keyHash])
+  @@index([createdById])
+}
+
+model ApiWallet {
+  id        String   @id @default("default")
+  balance   Int      @default(0)
+  currency  String   @default("credits")
+  updatedAt DateTime @updatedAt
+}
+
+model ApiWalletTransaction {
+  id            String   @id @default(cuid())
+  amount        Int
+  type          String
+  description   String
+  reference     String?
+  performedById String
+  performedBy   User     @relation("WalletTransactions", fields: [performedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
 }

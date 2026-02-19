@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
-import { Users, Bell, Facebook, User, ListFilter, Globe } from "lucide-react";
+import { Users, Bell, Facebook, User, ListFilter, Globe, KeyRound, Wallet } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -96,6 +96,34 @@ export default async function SettingsPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Landing Page</p>
                   <p className="text-xs text-gray-500">Set your website URL</p>
+                </div>
+              </div>
+            </Link>
+            <Link
+              href="/settings/api-keys"
+              className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
+                  <KeyRound className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">API Keys</p>
+                  <p className="text-xs text-gray-500">Manage external API access</p>
+                </div>
+              </div>
+            </Link>
+            <Link
+              href="/settings/api-wallet"
+              className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                  <Wallet className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">API Wallet</p>
+                  <p className="text-xs text-gray-500">Manage API usage credits</p>
                 </div>
               </div>
             </Link>
