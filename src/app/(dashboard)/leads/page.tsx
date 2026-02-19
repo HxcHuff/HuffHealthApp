@@ -34,7 +34,11 @@ export default async function LeadsPage({ searchParams }: Props) {
     getLeadSources(),
   ]);
 
-  let leads, total, page, totalPages;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let leads: any[] = [];
+  let total = 0;
+  let page = 1;
+  let totalPages = 0;
   let queryError: string | null = null;
 
   try {
