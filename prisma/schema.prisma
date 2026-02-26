@@ -320,8 +320,12 @@ model LeadSource {
   id       String  @id @default(cuid())
   name     String  @unique
   isActive Boolean @default(true)
+  apiKeyId String?
+  apiKey   ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
+
+  @@index([apiKeyId])
 }
 
 model SiteSettings {
@@ -371,6 +375,7 @@ model ApiKey {
   revokedAt    DateTime?
   createdById  String
   createdBy    User      @relation("ApiKeys", fields: [createdById], references: [id])
+  leadSources  LeadSource[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -394,6 +399,14 @@ model ApiWalletTransaction {
   performedById String
   performedBy   User     @relation("WalletTransactions", fields: [performedById], references: [id])
   createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model DripWebhookReceipt {
+  id        String   @id @default(cuid())
+  eventKey  String   @unique
+  createdAt DateTime @default(now())
 
   @@index([createdAt])
 }

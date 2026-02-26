@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createTicket } from "@/actions/tickets";
-import { TICKET_PRIORITY_OPTIONS } from "@/lib/constants";
+import { TICKET_PRIORITY_OPTIONS, TICKET_SUBJECT_OPTIONS } from "@/lib/constants";
 
 interface TicketFormProps {
   staffUsers?: { id: string; name: string }[];
@@ -24,6 +24,7 @@ export function TicketForm({
 }: TicketFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [subject, setSubject] = useState("");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   async function handleSubmit(formData: FormData) {
@@ -46,9 +47,25 @@ export function TicketForm({
     <form action={handleSubmit} className="space-y-4 max-w-2xl">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+        <select
+          onChange={(e) => {
+            if (e.target.value) setSubject(e.target.value);
+          }}
+          defaultValue=""
+          className="mb-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="">Choose a common support subject</option>
+          {TICKET_SUBJECT_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
         <input
           name="subject"
           required
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           placeholder="Brief description of the issue"
         />
@@ -98,7 +115,7 @@ export function TicketForm({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {leads && leads.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Link to Lead</label>
@@ -116,6 +133,16 @@ export function TicketForm({
                 </select>
               </div>
             )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lead ID (manual)</label>
+              <input
+                name="leadIdManual"
+                defaultValue={defaultLeadId || ""}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Paste lead ID"
+              />
+              {errors.leadId && <p className="mt-1 text-xs text-red-600">{errors.leadId[0]}</p>}
+            </div>
             {contacts && contacts.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Link to Contact</label>

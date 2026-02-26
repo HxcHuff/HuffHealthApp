@@ -4,13 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:sandbox": "bash ./scripts/sandbox.sh dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "netlify dev:exec drizzle-kit migrate",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "netlify dev:exec drizzle-kit studio"
+    "db:studio": "netlify dev:exec drizzle-kit studio",
+    "sandbox:up": "bash ./scripts/sandbox.sh up",
+    "sandbox:down": "bash ./scripts/sandbox.sh down",
+    "sandbox:setup": "bash ./scripts/sandbox.sh setup",
+    "sandbox:reset": "bash ./scripts/sandbox.sh reset",
+    "deploy:live": "bash ./scripts/netlify-deploy-approved.sh",
+    "preflight:scale": "bash ./scripts/preflight-scale.sh"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

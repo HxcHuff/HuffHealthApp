@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { syncToDrip } from "@/actions/drip";
@@ -34,11 +34,13 @@ interface ClientTableProps {
 export function ClientTable({ clients, total, page, totalPages, activeFilter }: ClientTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearch = searchParams.get("search") || "";
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [syncing, setSyncing] = useState(false);
+  const [searchInput, setSearchInput] = useState(currentSearch);
   const [, startTransition] = useTransition();
 
-  function updateParams(key: string, value: string) {
+  const updateParams = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set(key, value);
@@ -47,7 +49,17 @@ export function ClientTable({ clients, total, page, totalPages, activeFilter }: 
     }
     if (key !== "page") params.delete("page");
     router.push(`/clients?${params.toString()}`);
-  }
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    setSearchInput(currentSearch);
+  }, [currentSearch]);
+
+  useEffect(() => {
+    if (searchInput === currentSearch) return;
+    const timeout = setTimeout(() => updateParams("search", searchInput), 300);
+    return () => clearTimeout(timeout);
+  }, [searchInput, currentSearch, updateParams]);
 
   function toggleSelect(id: string, e: React.MouseEvent) {
     e.stopPropagation();
@@ -123,11 +135,8 @@ export function ClientTable({ clients, total, page, totalPages, activeFilter }: 
           <input
             type="text"
             placeholder="Search clients..."
-            defaultValue={searchParams.get("search") || ""}
-            onChange={(e) => {
-              const timeout = setTimeout(() => updateParams("search", e.target.value), 300);
-              return () => clearTimeout(timeout);
-            }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
@@ -166,7 +175,7 @@ export function ClientTable({ clients, total, page, totalPages, activeFilter }: 
               {clients.map((client) => (
                 <tr
                   key={client.id}
-                  onClick={() => router.push(`/leads/${client.id}`)}
+                  onClick={() => router.push(`/clients/${client.id}`)}
                   className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>

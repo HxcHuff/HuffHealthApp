@@ -1,6 +1,8 @@
 [build]
   command = "npx prisma db push --url \"$NETLIFY_DATABASE_URL_UNPOOLED\" && npx prisma generate && npm run build"
   publish = ".next"
+  ignore = "bash ./scripts/netlify-ignore-unapproved.sh"
+  ignore = "bash ./scripts/netlify-ignore-unapproved.sh"
 
 [build.environment]
   NODE_VERSION = "20"

@@ -32,6 +32,7 @@ export async function createTask(data: Record<string, unknown>) {
 
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
+  revalidatePath("/calendar");
   return { success: true, id: task.id };
 }
 
@@ -58,6 +59,7 @@ export async function updateTask(id: string, data: Record<string, unknown>) {
 
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
+  revalidatePath("/calendar");
   return { success: true, task };
 }
 
@@ -80,6 +82,7 @@ export async function completeTask(id: string) {
 
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
+  revalidatePath("/calendar");
   return { success: true };
 }
 
@@ -92,7 +95,44 @@ export async function deleteTask(id: string) {
   await db.task.delete({ where: { id } });
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
+  revalidatePath("/calendar");
   return { success: true };
+}
+
+export async function getCalendarTasksForMonth({
+  month,
+  assignedToId,
+}: {
+  month?: string;
+  assignedToId?: string;
+} = {}) {
+  const parsed =
+    month && /^\d{4}-\d{2}$/.test(month)
+      ? new Date(`${month}-01T00:00:00`)
+      : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+  const monthStart = new Date(parsed.getFullYear(), parsed.getMonth(), 1);
+  const monthEnd = new Date(parsed.getFullYear(), parsed.getMonth() + 1, 1);
+
+  const where: Record<string, unknown> = {
+    dueDate: { gte: monthStart, lt: monthEnd },
+  };
+  if (assignedToId) where.assignedToId = assignedToId;
+
+  const tasks = await db.task.findMany({
+    where,
+    include: {
+      assignedTo: { select: { id: true, name: true } },
+      lead: { select: { id: true, firstName: true, lastName: true } },
+      ticket: { select: { id: true, subject: true } },
+    },
+    orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+  });
+
+  return {
+    month: `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, "0")}`,
+    tasks,
+  };
 }
 
 export async function getTasks({

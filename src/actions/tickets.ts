@@ -11,13 +11,16 @@ export async function createTicket(formData: FormData) {
   const session = await auth();
   if (!session) return { error: "Unauthorized" };
 
+  const selectedLeadId = (formData.get("leadId") as string | null)?.trim();
+  const manualLeadId = (formData.get("leadIdManual") as string | null)?.trim();
+
   const raw = {
     subject: formData.get("subject") as string,
     description: formData.get("description") as string,
     priority: (formData.get("priority") as string) || "MEDIUM",
     assignedToId: formData.get("assignedToId") as string || undefined,
     clientId: formData.get("clientId") as string || undefined,
-    leadId: formData.get("leadId") as string || undefined,
+    leadId: manualLeadId || selectedLeadId || undefined,
     contactId: formData.get("contactId") as string || undefined,
     dueDate: formData.get("dueDate") as string || undefined,
   };
@@ -25,6 +28,17 @@ export async function createTicket(formData: FormData) {
   const validated = CreateTicketSchema.safeParse(raw);
   if (!validated.success) {
     return { error: validated.error.flatten().fieldErrors };
+  }
+
+  if (validated.data.leadId) {
+    const leadExists = await db.lead.findUnique({
+      where: { id: validated.data.leadId },
+      select: { id: true },
+    });
+
+    if (!leadExists) {
+      return { error: { leadId: ["Lead ID not found. Please check and try again."] } };
+    }
   }
 
   const isClient = session.user.role === "CLIENT";
