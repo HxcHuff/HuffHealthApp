@@ -20,6 +20,19 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Netlify Cost Control (Local-First)
+
+Netlify auto deploys are gated off by default for this repo.
+
+- Any regular Git push build is skipped by `scripts/netlify-ignore-unapproved.sh`.
+- Live deploys only run when you explicitly approve with:
+
+```bash
+npm run deploy:live -- --approve
+```
+
+This command sets `NETLIFY_APPROVED_DEPLOY=true` for that deploy and pushes production only when you intentionally trigger it.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
