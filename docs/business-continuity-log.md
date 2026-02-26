@@ -70,3 +70,8 @@ Purpose: timestamped operational record of infrastructure, integration, deploy-g
   - storage/purge service in /Users/david_huff/HuffHealthApp/src/lib/dropbox.ts
   - UI operationalization in /Users/david_huff/HuffHealthApp/src/components/v2/workspaces/documents-workspace.tsx and /Users/david_huff/HuffHealthApp/src/app/(dashboard)/documents/page.tsx
 - Prepared calendar operationalization backend by adding calendar revalidation and month task query helper in /Users/david_huff/HuffHealthApp/src/actions/tasks.ts (UI completion deferred while integration/security priorities were handled first).
+
+## 2026-02-25 20:18:57 EST
+- Ran full lint as a stabilization checkpoint before extended sandbox iteration.
+- Resolved blocking lint failures from `react-hooks/error-boundaries` by removing JSX `try/catch` wrapping in /Users/david_huff/HuffHealthApp/src/app/(dashboard)/dashboard/page.tsx and relying on framework error boundaries.
+- Validation result: lint now passes with warnings only (no errors), enabling continued dev flow without build/lint blockers.
