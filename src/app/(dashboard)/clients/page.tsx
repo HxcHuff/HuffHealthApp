@@ -4,6 +4,7 @@ import { getLeadSources } from "@/actions/settings";
 import { ClientTable } from "@/components/clients/client-table";
 import { ClientFilters } from "@/components/clients/client-filters";
 import { PageHeader } from "@/components/shared/page-header";
+import Link from "next/link";
 
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -42,6 +43,14 @@ export default async function ClientsPage({ searchParams }: Props) {
       <PageHeader
         title="Clients"
         description={`${total} total clients`}
+        actions={(
+          <Link
+            href="/clients/management"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Client Management
+          </Link>
+        )}
       />
       <div className="space-y-4">
         <ClientFilters staffUsers={staffUsers} leadSources={leadSources} />

@@ -71,6 +71,16 @@ enum ActivityType {
   FACEBOOK_SYNC
 }
 
+enum LeadEventType {
+  CREATED
+  SMS_SENT
+  EMAIL_SENT
+  CAPI_SENT
+  DUPLICATE_SUBMISSION
+  STAGE_CHANGED
+  NOTE
+}
+
 model User {
   id             String    @id @default(cuid())
   name           String
@@ -135,6 +145,21 @@ model Lead {
   lifeEvent      String?
   dripSyncedAt   DateTime?
 
+  // Ingest API fields
+  householdSize    Int?
+  estimatedIncome  Float?
+  qualifyingEvent  String?
+  campaign         String?
+  utmSource        String?
+  utmCampaign      String?
+  utmContent       String?
+  tcpaConsent      Boolean?
+  tcpaConsentText  String?          @db.Text
+  tcpaTimestamp    DateTime?
+  ipAddress        String?
+  userAgent        String?          @db.Text
+  lastTouchAt      DateTime?
+
   assignedToId String?
   assignedTo   User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
   createdById  String
@@ -147,6 +172,7 @@ model Lead {
   activities Activity[]
   tickets    Ticket[]
   tasks      Task[]
+  leadEvents LeadEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -155,6 +181,20 @@ model Lead {
   @@index([assignedToId])
   @@index([leadListId])
   @@index([email])
+  @@index([phone])
+  @@index([createdAt])
+}
+
+model LeadEvent {
+  id        String        @id @default(cuid())
+  leadId    String
+  lead      Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      LeadEventType
+  payload   Json?
+  createdAt DateTime      @default(now())
+
+  @@index([leadId])
+  @@index([type])
   @@index([createdAt])
 }
 
@@ -320,8 +360,12 @@ model LeadSource {
   id       String  @id @default(cuid())
   name     String  @unique
   isActive Boolean @default(true)
+  apiKeyId String?
+  apiKey   ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
+
+  @@index([apiKeyId])
 }
 
 model SiteSettings {
@@ -371,6 +415,7 @@ model ApiKey {
   revokedAt    DateTime?
   createdById  String
   createdBy    User      @relation("ApiKeys", fields: [createdById], references: [id])
+  leadSources  LeadSource[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -394,6 +439,14 @@ model ApiWalletTransaction {
   performedById String
   performedBy   User     @relation("WalletTransactions", fields: [performedById], references: [id])
   createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model DripWebhookReceipt {
+  id        String   @id @default(cuid())
+  eventKey  String   @unique
+  createdAt DateTime @default(now())
 
   @@index([createdAt])
 }

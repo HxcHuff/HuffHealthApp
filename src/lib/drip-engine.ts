@@ -1,3 +1,26 @@
+function getDripBaseUrl(): string {
+  if (!isInternalMode()) {
+    const explicit = process.env.DRIP_ENGINE_URL?.trim();
+    if (explicit) return explicit;
+  }
+  return (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").trim();
+}
+
+function isInternalMode(): boolean {
+  return (process.env.DRIP_ENGINE_MODE || "internal").toLowerCase() !== "external";
+}
+
+function endpoint(path: "intake" | "contacts" | "sequences"): string {
+  if (isInternalMode()) {
+    if (path === "intake") return "/api/messaging/webhook/intake";
+    if (path === "contacts") return "/api/messaging/contacts";
+    return "/api/messaging/sequences";
+  }
+  if (path === "intake") return "/api/webhook/intake";
+  if (path === "contacts") return "/api/contacts";
+  return "/api/sequences";
+}
+
 export async function syncToDripEngine(data: {
   first_name: string;
   last_name?: string;
@@ -9,12 +32,10 @@ export async function syncToDripEngine(data: {
   crm_lead_id?: string;
   crm_contact_id?: string;
 }): Promise<void> {
-  const url = process.env.DRIP_ENGINE_URL;
+  const url = getDripBaseUrl();
   const apiKey = process.env.DRIP_ENGINE_API_KEY;
 
-  if (!url) return;
-
-  fetch(`${url}/api/webhook/intake`, {
+  fetch(`${url}${endpoint("intake")}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -60,11 +81,10 @@ export type DripSequence = {
 };
 
 export async function getDripContact(email: string): Promise<DripContact | null> {
-  const url = process.env.DRIP_ENGINE_URL;
-  if (!url) return null;
+  const url = getDripBaseUrl();
 
   try {
-    const res = await fetch(`${url}/api/contacts`, { headers: dripHeaders() });
+    const res = await fetch(`${url}${endpoint("contacts")}`, { headers: dripHeaders() });
     if (!res.ok) return null;
     const contacts: DripContact[] = await res.json();
     return contacts.find((c) => c.email === email) || null;
@@ -74,11 +94,10 @@ export async function getDripContact(email: string): Promise<DripContact | null>
 }
 
 export async function getDripSequences(): Promise<DripSequence[]> {
-  const url = process.env.DRIP_ENGINE_URL;
-  if (!url) return [];
+  const url = getDripBaseUrl();
 
   try {
-    const res = await fetch(`${url}/api/sequences`, { headers: dripHeaders() });
+    const res = await fetch(`${url}${endpoint("sequences")}`, { headers: dripHeaders() });
     if (!res.ok) return [];
     const sequences: DripSequence[] = await res.json();
     return sequences.filter((s) => s.is_active);
@@ -117,8 +136,7 @@ export async function autoEnrollByStatus(email: string, newStatus: string): Prom
 }
 
 export async function enrollInSequence(contactEmail: string, _sequenceId: string): Promise<boolean> {
-  const url = process.env.DRIP_ENGINE_URL;
-  if (!url) return false;
+  const url = getDripBaseUrl();
 
   try {
     // Re-sync contact through intake to trigger auto-enrollment
@@ -126,7 +144,7 @@ export async function enrollInSequence(contactEmail: string, _sequenceId: string
     const contact = await getDripContact(contactEmail);
     if (!contact) return false;
 
-    const res = await fetch(`${url}/api/webhook/intake`, {
+    const res = await fetch(`${url}${endpoint("intake")}`, {
       method: "POST",
       headers: dripHeaders(),
       body: JSON.stringify({

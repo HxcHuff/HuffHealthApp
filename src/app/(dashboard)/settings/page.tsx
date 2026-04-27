@@ -1,15 +1,20 @@
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/shared/page-header";
+import { DisplaySettingsCard } from "@/components/settings/display-settings-card";
 import Link from "next/link";
-import { Users, Bell, Facebook, User, ListFilter, Globe, KeyRound, Wallet } from "lucide-react";
+import { Users, Bell, Facebook, User, ListFilter, Globe, Wallet, Upload, Download, CalendarDays } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();
   const isAdmin = session?.user.role === "ADMIN";
+  const canManageData = session?.user.role === "ADMIN" || session?.user.role === "STAFF";
 
   return (
     <>
       <PageHeader title="Settings" />
+      <div className="mb-4 max-w-2xl">
+        <DisplaySettingsCard />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
         <Link
           href="/settings/profile"
@@ -55,6 +60,54 @@ export default async function SettingsPage() {
             </div>
           </div>
         </Link>
+        {canManageData && (
+          <Link
+            href="/leads/import"
+            className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
+                <Upload className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Import Leads</p>
+                <p className="text-xs text-gray-500">Upload and map lead CSV/XLS files</p>
+              </div>
+            </div>
+          </Link>
+        )}
+        {canManageData && (
+          <Link
+            href="/clients/import"
+            className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-50">
+                <Upload className="h-5 w-5 text-sky-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Import Clients</p>
+                <p className="text-xs text-gray-500">Bulk import enrolled client records</p>
+              </div>
+            </div>
+          </Link>
+        )}
+        {canManageData && (
+          <Link
+            href="/settings/export"
+            className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                <Download className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Export Data</p>
+                <p className="text-xs text-gray-500">Download leads and clients as CSV</p>
+              </div>
+            </div>
+          </Link>
+        )}
         {isAdmin && (
           <>
             <Link
@@ -86,6 +139,20 @@ export default async function SettingsPage() {
               </div>
             </Link>
             <Link
+              href="/settings/integrations/google-calendar"
+              className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                  <CalendarDays className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Google Calendar</p>
+                  <p className="text-xs text-gray-500">Connect agent calendars</p>
+                </div>
+              </div>
+            </Link>
+            <Link
               href="/settings/landing-page"
               className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
             >
@@ -96,20 +163,6 @@ export default async function SettingsPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Landing Page</p>
                   <p className="text-xs text-gray-500">Set your website URL</p>
-                </div>
-              </div>
-            </Link>
-            <Link
-              href="/settings/api-keys"
-              className="rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
-                  <KeyRound className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">API Keys</p>
-                  <p className="text-xs text-gray-500">Manage external API access</p>
                 </div>
               </div>
             </Link>

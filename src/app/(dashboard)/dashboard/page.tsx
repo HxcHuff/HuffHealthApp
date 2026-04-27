@@ -15,8 +15,16 @@ import {
   Calendar,
   AlertCircle,
 } from "lucide-react";
+import { isUiV2Enabled } from "@/lib/feature-flags";
+import { CommandCenterWorkspace } from "@/components/v2/workspaces/command-center-workspace";
+import { getCommandCenterData } from "@/actions/dashboard";
 
 export default async function DashboardPage() {
+  if (isUiV2Enabled()) {
+    const commandCenterData = await getCommandCenterData();
+    return <CommandCenterWorkspace initialData={commandCenterData} />;
+  }
+
   const session = await auth();
   if (!session) return null;
 

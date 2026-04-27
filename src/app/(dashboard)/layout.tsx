@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { AuthProvider } from "@/providers/session-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopNav } from "@/components/layout/top-nav";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { getSiteSettings } from "@/actions/site-settings";
 
 export default async function DashboardLayout({
@@ -25,9 +26,10 @@ export default async function DashboardLayout({
         <Sidebar role={session.user.role} landingPageUrl={siteSettings?.landingPageUrl} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopNav user={session.user} />
-          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24 lg:p-6 lg:pb-6">
             {children}
           </main>
+          <MobileBottomNav />
         </div>
       </div>
     </AuthProvider>

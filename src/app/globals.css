@@ -5,6 +5,11 @@
   --foreground: #171717;
 }
 
+:root.dark {
+  --background: #0b1220;
+  --foreground: #e5e7eb;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -15,4 +20,49 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+html.dark .bg-white {
+  background-color: #111827;
+}
+
+html.dark .bg-gray-50 {
+  background-color: #0f172a;
+}
+
+html.dark .bg-gray-100 {
+  background-color: #1f2937;
+}
+
+html.dark .border-gray-200 {
+  border-color: #334155;
+}
+
+html.dark .border-gray-100 {
+  border-color: #293548;
+}
+
+html.dark .text-gray-900 {
+  color: #f3f4f6;
+}
+
+html.dark .text-gray-700 {
+  color: #d1d5db;
+}
+
+html.dark .text-gray-600 {
+  color: #9ca3af;
+}
+
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #94a3b8;
+}
+
+html.dark .hover\:bg-gray-50:hover {
+  background-color: #1e293b;
+}
+
+html.dark .hover\:bg-gray-100:hover {
+  background-color: #334155;
 }

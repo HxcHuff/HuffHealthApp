@@ -21,6 +21,23 @@ export const TICKET_PRIORITY_OPTIONS = [
   { value: "URGENT", label: "Urgent", color: "bg-red-100 text-red-800" },
 ] as const;
 
+export const TICKET_SUBJECT_OPTIONS = [
+  "ID card request/replacement",
+  "Billing or premium payment",
+  "Claim status or EOB question",
+  "Provider network or PCP change",
+  "Prescription drug or formulary question",
+  "Prior authorization or referral request",
+  "Coverage verification or benefits question",
+  "Enrollment or plan change",
+  "Special Enrollment (life event)",
+  "Add or remove dependent",
+  "Cancellation or termination request",
+  "Appeal or grievance support",
+  "Renewal review follow-up",
+  "General customer service",
+] as const;
+
 export const ROLE_OPTIONS = [
   { value: "ADMIN", label: "Admin" },
   { value: "STAFF", label: "Staff" },

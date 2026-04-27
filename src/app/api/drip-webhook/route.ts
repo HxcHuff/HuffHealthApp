@@ -6,6 +6,10 @@ export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   const expectedKey = process.env.DRIP_WEBHOOK_SECRET;
 
+  if (process.env.NODE_ENV === "production" && !expectedKey) {
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 503 });
+  }
+
   if (expectedKey && apiKey !== expectedKey) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -16,6 +20,22 @@ export async function POST(req: NextRequest) {
 
     if (!channel || !status) {
       return NextResponse.json({ error: "channel and status required" }, { status: 400 });
+    }
+
+    // Idempotency: drop duplicate callbacks by deterministic key.
+    const eventKey = JSON.stringify({
+      crm_lead_id: crm_lead_id || null,
+      crm_contact_id: crm_contact_id || null,
+      channel,
+      status,
+      template_name: template_name || "",
+      sent_at: sent_at || "",
+      error: error || "",
+    });
+    try {
+      await db.dripWebhookReceipt.create({ data: { eventKey } });
+    } catch {
+      return NextResponse.json({ success: true, deduped: true });
     }
 
     // Map drip channel to activity type
