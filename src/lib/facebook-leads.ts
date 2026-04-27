@@ -9,7 +9,7 @@ import {
 export async function processIncomingFacebookLead(
   leadgenId: string,
   pageId: string,
-  formId: string
+  _formId: string
 ) {
   const integration = await db.facebookIntegration.findUnique({
     where: { pageId },

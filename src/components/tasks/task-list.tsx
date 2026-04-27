@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { completeTask, deleteTask } from "@/actions/tasks";
 import { TICKET_PRIORITY_OPTIONS } from "@/lib/constants";
-import { formatRelativeTime, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Check, Trash2, Target, Ticket, Calendar, AlertCircle } from "lucide-react";
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateLead } from "@/actions/leads";
 import { LEAD_STATUS_OPTIONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { GripVertical, Phone, MapPin, Clock, Mail, User, Zap } from "lucide-react";
+import { GripVertical, Phone, MapPin, Clock, Mail, Zap } from "lucide-react";
 import Link from "next/link";
 
 interface Lead {

@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@/generated/prisma/client";
 
 type GoogleCalendarConnection = {
   connected: boolean;
@@ -52,7 +53,7 @@ export async function disconnectGoogleCalendarIntegration() {
 
   await db.user.update({
     where: { id: session.user.id },
-    data: { notificationPreferences: nextPrefs },
+    data: { notificationPreferences: nextPrefs as Prisma.InputJsonValue },
   });
 
   revalidatePath("/settings/integrations/google-calendar");

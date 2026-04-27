@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getTasks, getMyTasks } from "@/actions/tasks";
+import { getTasks } from "@/actions/tasks";
 import { getStaffUsers } from "@/actions/leads";
 import { TaskList } from "@/components/tasks/task-list";
 import { TaskForm } from "@/components/tasks/task-form";
