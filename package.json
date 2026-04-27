@@ -17,7 +17,9 @@
     "sandbox:setup": "bash ./scripts/sandbox.sh setup",
     "sandbox:reset": "bash ./scripts/sandbox.sh reset",
     "deploy:live": "bash ./scripts/netlify-deploy-approved.sh",
-    "preflight:scale": "bash ./scripts/preflight-scale.sh"
+    "preflight:scale": "bash ./scripts/preflight-scale.sh",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -36,6 +38,7 @@
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "exceljs": "^4.4.0",
+    "libphonenumber-js": "^1.12.42",
     "lucide-react": "^0.563.0",
     "next": "^16.1.6",
     "next-auth": "^5.0.0-beta.30",
@@ -63,7 +66,8 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   },
   "overrides": {
     "lodash": "4.17.23",

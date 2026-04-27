@@ -135,3 +135,9 @@ npm run db:studio    # Open Prisma Studio
 - **Activity** — Audit log (notes, status changes, assignments, emails, calls, etc.)
 - **Announcement** — Admin-published announcements for portal
 - **FacebookIntegration** — Facebook Lead Ad sync configuration
+
+## Output conventions
+
+- NEVER include 'Generated with Claude Code', a robot emoji, 'Co-authored-by: Claude', or any AI-attribution footer in commit messages, PR descriptions, code comments, or documentation.
+- Write all output as if authored by the human developer.
+- Use Next.js 16 'proxy.ts' convention. Do not create 'middleware.ts'.
