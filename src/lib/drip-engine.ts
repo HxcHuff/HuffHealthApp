@@ -116,7 +116,7 @@ export async function autoEnrollByStatus(email: string, newStatus: string): Prom
   }
 }
 
-export async function enrollInSequence(contactEmail: string, sequenceId: string): Promise<boolean> {
+export async function enrollInSequence(contactEmail: string, _sequenceId: string): Promise<boolean> {
   const url = process.env.DRIP_ENGINE_URL;
   if (!url) return false;
 
