@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { encrypt } from "@/lib/encryption";
+import type { Prisma } from "@/generated/prisma/client";
 
 type UserPrefs = Record<string, unknown>;
 
@@ -104,7 +105,7 @@ export async function GET(request: Request) {
 
     await db.user.update({
       where: { id: session.user.id },
-      data: { notificationPreferences: nextPrefs },
+      data: { notificationPreferences: nextPrefs as Prisma.InputJsonValue },
     });
 
     return NextResponse.redirect(new URL("/settings/integrations/google-calendar?success=connected", appUrl));

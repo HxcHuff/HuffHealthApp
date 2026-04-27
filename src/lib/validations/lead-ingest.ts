@@ -39,7 +39,7 @@ export const LeadIngestSchema = z.object({
   estimated_income: z.number().positive("Must be a positive number").optional(),
   qualifying_event: z.string().optional(),
   tcpa_consent: z.literal(true, {
-    errorMap: () => ({ message: "TCPA consent must be true" }),
+    message: "TCPA consent must be true",
   }),
   tcpa_consent_text: z.string().min(1, "TCPA consent text is required"),
   tcpa_timestamp: z.string().datetime("Must be a valid ISO 8601 datetime"),
