@@ -21,6 +21,7 @@ import {
   Globe,
   UserCheck,
   Inbox,
+  MessageSquare,
   ShieldCheck,
   CalendarDays,
   FileText,
@@ -64,6 +65,7 @@ const staffNavItems = [
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/contacts", label: "Contacts", icon: Contact },
   { href: "/clients", label: "Clients", icon: UserCheck },
+  { href: "/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/announcements", label: "Announcements", icon: Megaphone },
 ];
 
