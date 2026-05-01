@@ -82,7 +82,8 @@ Add these to Netlify (Site → Environment variables) for each environment:
 | `LEAD_ROUTER_WEBHOOK_SECRET` | optional | Sent as `x-webhook-secret`. Verify it on the receiver. |
 | `TWILIO_ACCOUNT_SID` | yes (prod) | From step 1. |
 | `TWILIO_AUTH_TOKEN` | yes (prod) | From step 1. |
-| `TWILIO_FROM_NUMBER` | yes (prod) | E.164. Must be the A2P-registered number. |
+| `TWILIO_MESSAGING_SERVICE_SID` | recommended (prod) | E.g. `MGxxxxxxxx`. Preferred for A2P 10DLC — sends via the campaign-attributed Messaging Service, gets STOP/HELP auto-handling and number fallback. |
+| `TWILIO_FROM_NUMBER` | required if MSG_SERVICE not set | E.164. Used only when `TWILIO_MESSAGING_SERVICE_SID` is unset. |
 | `NEXT_PUBLIC_APP_URL` | yes | Used to build the deep link in the admin alert SMS. |
 
 ---

@@ -32,9 +32,31 @@ describe("sendSms", () => {
     vi.stubEnv("TWILIO_ACCOUNT_SID", "");
     vi.stubEnv("TWILIO_AUTH_TOKEN", "");
     vi.stubEnv("TWILIO_FROM_NUMBER", "");
+    vi.stubEnv("TWILIO_MESSAGING_SERVICE_SID", "");
 
     const res = await sendSms({ to: "+18635551234", body: "hi" });
     expect(res.status).toBe("skipped_no_credentials");
+  });
+
+  it("uses MessagingServiceSid when TWILIO_MESSAGING_SERVICE_SID is set", async () => {
+    vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "");
+    vi.stubEnv("TWILIO_ACCOUNT_SID", "ACtest");
+    vi.stubEnv("TWILIO_AUTH_TOKEN", "secret");
+    vi.stubEnv("TWILIO_MESSAGING_SERVICE_SID", "MG8d3f03dbda");
+    vi.stubEnv("TWILIO_FROM_NUMBER", "+15555550000");
+
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ sid: "SM456" }),
+    });
+    globalThis.fetch = fetchSpy as typeof fetch;
+
+    const res = await sendSms({ to: "+18635551234", body: "hi" });
+    expect(res.status).toBe("sent");
+    const body = (fetchSpy.mock.calls[0][1] as RequestInit).body as string;
+    expect(body).toContain("MessagingServiceSid=MG8d3f03dbda");
+    expect(body).not.toContain("From=");
   });
 
   it("posts to Twilio when fully configured", async () => {

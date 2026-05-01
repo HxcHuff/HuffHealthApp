@@ -21,16 +21,22 @@ export async function sendSms({ to, body }: SendSmsOptions): Promise<SendSmsResu
 
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
   const from = process.env.TWILIO_FROM_NUMBER;
 
-  if (!accountSid || !authToken || !from) {
+  if (!accountSid || !authToken || (!messagingServiceSid && !from)) {
     console.warn(`[sms] Twilio credentials not configured, skipping SMS to ${to}`);
     return { status: "skipped_no_credentials" };
   }
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const auth = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
-  const params = new URLSearchParams({ To: to, From: from, Body: body });
+  const params = new URLSearchParams({ To: to, Body: body });
+  if (messagingServiceSid) {
+    params.set("MessagingServiceSid", messagingServiceSid);
+  } else if (from) {
+    params.set("From", from);
+  }
 
   try {
     const res = await fetch(url, {
