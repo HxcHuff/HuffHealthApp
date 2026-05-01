@@ -118,6 +118,17 @@ async function main() {
     process.exit(1);
   }
 
+  // Override phone with SIMULATE_PHONE env var (so live tests deliver SMS to a real cell
+  // without editing this file). Override email with a per-run timestamp so the 30-day
+  // dedupe window doesn't swallow repeat tests against the same scenario.
+  const phoneOverride = process.env.SIMULATE_PHONE;
+  if (phoneOverride) {
+    scenario.payload.phone = phoneOverride;
+  }
+  const baseEmail = (scenario.payload.email as string) ?? `test.${scenario.name}@example.com`;
+  const [local, domain] = baseEmail.split("@");
+  scenario.payload.email = `${local}+${Date.now()}@${domain}`;
+
   const baseUrl = process.env.SIMULATE_BASE_URL ?? "http://localhost:3000";
   const secret = process.env.LEAD_INGEST_SECRET;
   if (!secret) {
