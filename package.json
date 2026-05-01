@@ -20,7 +20,9 @@
     "preflight:scale": "bash ./scripts/preflight-scale.sh",
     "test": "vitest run",
     "test:watch": "vitest",
-    "simulate:lead": "LEAD_PIPELINE_DRY_RUN=true tsx scripts/simulate-lead.ts"
+    "simulate:lead": "LEAD_PIPELINE_DRY_RUN=true tsx scripts/simulate-lead.ts",
+    "twilio:setup": "tsx scripts/twilio-setup.ts",
+    "twilio:setup:dry": "tsx scripts/twilio-setup.ts --dry-run"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
