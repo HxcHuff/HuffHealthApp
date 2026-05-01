@@ -5,6 +5,7 @@ import {
   getFormLeads,
   mapFacebookLeadToLead,
 } from "@/lib/facebook";
+import { routeLeadAsync } from "@/lib/lead-router";
 
 export async function processIncomingFacebookLead(
   leadgenId: string,
@@ -50,13 +51,16 @@ export async function processIncomingFacebookLead(
     }
   }
 
-  await db.lead.create({
+  const created = await db.lead.create({
     data: {
       ...leadData,
       customFields: leadData.customFields || undefined,
       createdById: integration.createdById,
     },
+    select: { id: true },
   });
+
+  routeLeadAsync(created.id);
 }
 
 export async function syncFacebookLeads(integrationId: string) {
@@ -111,13 +115,15 @@ export async function syncFacebookLeads(integrationId: string) {
             continue;
           }
 
-          await db.lead.create({
+          const created = await db.lead.create({
             data: {
               ...leadData,
               customFields: leadData.customFields || undefined,
               createdById: integration.createdById,
             },
+            select: { id: true },
           });
+          routeLeadAsync(created.id);
           synced++;
         } catch {
           errors++;

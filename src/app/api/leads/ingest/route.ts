@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { LeadIngestSchema } from "@/lib/validations/lead-ingest";
+import { routeLeadAsync } from "@/lib/lead-router";
 import { randomUUID } from "crypto";
 import { timingSafeEqual } from "crypto";
 
@@ -171,6 +172,10 @@ export async function POST(req: NextRequest) {
     console.info(
       `[lead-ingest] [${correlationId}] Created lead: ${lead.id}`
     );
+
+    // Fire-and-forget: classify, notify admin, text the lead, dispatch webhook.
+    routeLeadAsync(lead.id);
+
     return NextResponse.json(
       { leadId: lead.id, duplicate: false, correlationId },
       { status: 201 }

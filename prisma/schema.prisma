@@ -79,6 +79,23 @@ enum LeadEventType {
   DUPLICATE_SUBMISSION
   STAGE_CHANGED
   NOTE
+  ROUTED
+  ADMIN_NOTIFIED
+  WEBHOOK_DISPATCHED
+}
+
+enum LeadPriority {
+  HOT
+  WARM
+  COLD
+}
+
+enum LeadSourceCategory {
+  PAID
+  ORGANIC
+  REFERRAL
+  DIRECT
+  OTHER
 }
 
 model User {
@@ -160,6 +177,12 @@ model Lead {
   userAgent        String?          @db.Text
   lastTouchAt      DateTime?
 
+  // Router / CRM pipeline fields
+  priority         LeadPriority        @default(COLD)
+  sourceCategory   LeadSourceCategory?
+  routedAt         DateTime?
+  speedToLeadAt    DateTime?
+
   assignedToId String?
   assignedTo   User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
   createdById  String
@@ -183,6 +206,8 @@ model Lead {
   @@index([email])
   @@index([phone])
   @@index([createdAt])
+  @@index([priority])
+  @@index([sourceCategory])
 }
 
 model LeadEvent {

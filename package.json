@@ -19,7 +19,8 @@
     "deploy:live": "bash ./scripts/netlify-deploy-approved.sh",
     "preflight:scale": "bash ./scripts/preflight-scale.sh",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "simulate:lead": "LEAD_PIPELINE_DRY_RUN=true tsx scripts/simulate-lead.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

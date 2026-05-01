@@ -172,7 +172,16 @@ export function mapFacebookLeadToLead(fbLead: FacebookLead) {
     phone: mapped.phone,
     company: mapped.company,
     jobTitle: mapped.jobTitle,
-    source: "Facebook Lead Ad",
+    source: "fb_lead_ad",
+    // Facebook lead-form submissions include the consent disclosure on the form
+    // itself; recording these fields lets the speed-to-lead router send the SMS
+    // and gives us TCPA evidence per lead.
+    tcpaConsent: true,
+    tcpaConsentText:
+      "Lead submitted via Facebook Lead Ad — consent collected on the Facebook lead form.",
+    tcpaTimestamp: fbLead.created_time
+      ? new Date(fbLead.created_time)
+      : new Date(),
     customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
   };
 }
