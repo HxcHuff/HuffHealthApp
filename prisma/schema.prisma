@@ -82,6 +82,51 @@ enum LeadEventType {
   ROUTED
   ADMIN_NOTIFIED
   WEBHOOK_DISPATCHED
+  CONVERSATION_STARTED
+  CONVERSATION_MESSAGE
+  CONSENT_RECORDED
+  CONSENT_REVOKED
+}
+
+enum ConversationChannel {
+  SMS
+  WHATSAPP
+  WEBCHAT
+}
+
+enum ConversationStatus {
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageDeliveryStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  UNDELIVERED
+}
+
+enum ConsentType {
+  TCPA_EXPRESS_WRITTEN
+  CMS_SOA
+  MARKETING_OPT_IN
+  INBOUND_INITIATED
+}
+
+enum ConsentMethod {
+  WEB_FORM
+  VERBAL_RECORDED
+  WRITTEN_SIGNATURE
+  ELECTRONIC
+  INBOUND_INITIATED
 }
 
 enum LeadPriority {
@@ -99,89 +144,89 @@ enum LeadSourceCategory {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String
-  email          String    @unique
-  hashedPassword String
-  image          String?
-  role           UserRole  @default(CLIENT)
-  isActive                Boolean   @default(true)
+  id                      String   @id @default(cuid())
+  name                    String
+  email                   String   @unique
+  hashedPassword          String
+  image                   String?
+  role                    UserRole @default(CLIENT)
+  isActive                Boolean  @default(true)
   notificationPreferences Json?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  assignedLeads   Lead[]          @relation("AssignedLeads")
-  createdLeads    Lead[]          @relation("CreatedLeads")
-  assignedTickets Ticket[]        @relation("AssignedTickets")
-  createdTickets  Ticket[]        @relation("CreatedTickets")
-  clientTickets   Ticket[]        @relation("ClientTickets")
-  ticketComments  TicketComment[]
-  activities      Activity[]      @relation("ActivityPerformer")
-  assignedTasks   Task[]          @relation("AssignedTasks")
-  createdTasks    Task[]          @relation("CreatedTasks")
-  leadLists              LeadList[]
-  announcements          Announcement[]
-  facebookIntegrations   FacebookIntegration[]
-  apiKeys                ApiKey[]               @relation("ApiKeys")
-  walletTransactions     ApiWalletTransaction[] @relation("WalletTransactions")
+  assignedLeads        Lead[]                 @relation("AssignedLeads")
+  createdLeads         Lead[]                 @relation("CreatedLeads")
+  assignedTickets      Ticket[]               @relation("AssignedTickets")
+  createdTickets       Ticket[]               @relation("CreatedTickets")
+  clientTickets        Ticket[]               @relation("ClientTickets")
+  ticketComments       TicketComment[]
+  activities           Activity[]             @relation("ActivityPerformer")
+  assignedTasks        Task[]                 @relation("AssignedTasks")
+  createdTasks         Task[]                 @relation("CreatedTasks")
+  leadLists            LeadList[]
+  announcements        Announcement[]
+  facebookIntegrations FacebookIntegration[]
+  apiKeys              ApiKey[]               @relation("ApiKeys")
+  walletTransactions   ApiWalletTransaction[] @relation("WalletTransactions")
 
   @@index([email])
   @@index([role])
 }
 
 model Lead {
-  id             String     @id @default(cuid())
-  firstName      String
-  lastName       String
-  email          String?
-  phone          String?
-  company        String?
-  jobTitle       String?
-  source         String?
-  status         LeadStatus @default(NEW_LEAD)
-  stageEnteredAt DateTime   @default(now())
-  notes          String?    @db.Text
-  customFields   Json?
-  disputeStatus  String?
-  externalLeadId String?
-  orderId        String?
-  received       String?
-  fund           String?
-  dateOfBirth    String?
-  address        String?
-  city           String?
-  state          String?
-  zipCode        String?
-  price          String?
-  insuranceType  InsuranceType?
-  planType       String?
-  policyStatus   PolicyStatus?
+  id                String         @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String?
+  phone             String?
+  company           String?
+  jobTitle          String?
+  source            String?
+  status            LeadStatus     @default(NEW_LEAD)
+  stageEnteredAt    DateTime       @default(now())
+  notes             String?        @db.Text
+  customFields      Json?
+  disputeStatus     String?
+  externalLeadId    String?
+  orderId           String?
+  received          String?
+  fund              String?
+  dateOfBirth       String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  price             String?
+  insuranceType     InsuranceType?
+  planType          String?
+  policyStatus      PolicyStatus?
   policyRenewalDate DateTime?
-  lastReviewDate DateTime?
-  followUpDate   DateTime?
-  lifeEvent      String?
-  dripSyncedAt   DateTime?
+  lastReviewDate    DateTime?
+  followUpDate      DateTime?
+  lifeEvent         String?
+  dripSyncedAt      DateTime?
 
   // Ingest API fields
-  householdSize    Int?
-  estimatedIncome  Float?
-  qualifyingEvent  String?
-  campaign         String?
-  utmSource        String?
-  utmCampaign      String?
-  utmContent       String?
-  tcpaConsent      Boolean?
-  tcpaConsentText  String?          @db.Text
-  tcpaTimestamp    DateTime?
-  ipAddress        String?
-  userAgent        String?          @db.Text
-  lastTouchAt      DateTime?
+  householdSize   Int?
+  estimatedIncome Float?
+  qualifyingEvent String?
+  campaign        String?
+  utmSource       String?
+  utmCampaign     String?
+  utmContent      String?
+  tcpaConsent     Boolean?
+  tcpaConsentText String?   @db.Text
+  tcpaTimestamp   DateTime?
+  ipAddress       String?
+  userAgent       String?   @db.Text
+  lastTouchAt     DateTime?
 
   // Router / CRM pipeline fields
-  priority         LeadPriority        @default(COLD)
-  sourceCategory   LeadSourceCategory?
-  routedAt         DateTime?
-  speedToLeadAt    DateTime?
+  priority       LeadPriority        @default(COLD)
+  sourceCategory LeadSourceCategory?
+  routedAt       DateTime?
+  speedToLeadAt  DateTime?
 
   assignedToId String?
   assignedTo   User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
@@ -192,10 +237,12 @@ model Lead {
   contactId    String?   @unique
   contact      Contact?  @relation(fields: [contactId], references: [id])
 
-  activities Activity[]
-  tickets    Ticket[]
-  tasks      Task[]
-  leadEvents LeadEvent[]
+  activities    Activity[]
+  tickets       Ticket[]
+  tasks         Task[]
+  leadEvents    LeadEvent[]
+  conversations Conversation[]
+  consentLogs   ConsentLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -278,15 +325,15 @@ model Ticket {
   reference   String         @unique @default(cuid())
 
   createdById  String
-  createdBy    User    @relation("CreatedTickets", fields: [createdById], references: [id])
+  createdBy    User      @relation("CreatedTickets", fields: [createdById], references: [id])
   assignedToId String?
-  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  assignedTo   User?     @relation("AssignedTickets", fields: [assignedToId], references: [id])
   clientId     String?
-  client       User?   @relation("ClientTickets", fields: [clientId], references: [id])
+  client       User?     @relation("ClientTickets", fields: [clientId], references: [id])
   leadId       String?
-  lead         Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
   contactId    String?
-  contact      Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contact      Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
   dueDate      DateTime?
 
   comments   TicketComment[]
@@ -328,11 +375,11 @@ model Activity {
   metadata    Json?
 
   performedById String
-  performedBy   User    @relation("ActivityPerformer", fields: [performedById], references: [id])
+  performedBy   User     @relation("ActivityPerformer", fields: [performedById], references: [id])
   leadId        String?
-  lead          Lead?   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead          Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
   ticketId      String?
-  ticket        Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket        Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   contactId     String?
   contact       Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
@@ -410,13 +457,13 @@ model Task {
   priority    TicketPriority @default(MEDIUM)
 
   assignedToId String
-  assignedTo   User    @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  assignedTo   User     @relation("AssignedTasks", fields: [assignedToId], references: [id])
   createdById  String
-  createdBy    User    @relation("CreatedTasks", fields: [createdById], references: [id])
+  createdBy    User     @relation("CreatedTasks", fields: [createdById], references: [id])
   leadId       String?
-  lead         Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  lead         Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
   ticketId     String?
-  ticket       Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  ticket       Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
   contactId    String?
   contact      Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
@@ -430,19 +477,19 @@ model Task {
 }
 
 model ApiKey {
-  id           String    @id @default(cuid())
+  id           String       @id @default(cuid())
   name         String
-  keyHash      String    @unique
-  encryptedKey String    @db.Text
+  keyHash      String       @unique
+  encryptedKey String       @db.Text
   prefix       String
   lastUsedAt   DateTime?
-  isRevoked    Boolean   @default(false)
+  isRevoked    Boolean      @default(false)
   revokedAt    DateTime?
   createdById  String
-  createdBy    User      @relation("ApiKeys", fields: [createdById], references: [id])
+  createdBy    User         @relation("ApiKeys", fields: [createdById], references: [id])
   leadSources  LeadSource[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@index([keyHash])
   @@index([createdById])
@@ -474,4 +521,85 @@ model DripWebhookReceipt {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+model Conversation {
+  id                    String              @id @default(cuid())
+  twilioConversationSid String              @unique
+  leadId                String?
+  lead                  Lead?               @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  channel               ConversationChannel @default(SMS)
+  status                ConversationStatus  @default(ACTIVE)
+  participantPhone      String?
+  agentIdentity         String?
+  attributes            Json?
+  lastMessageAt         DateTime?
+  lastInboundAt         DateTime?
+  lastOutboundAt        DateTime?
+  unreadCount           Int                 @default(0)
+  closedAt              DateTime?
+  closedReason          String?
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([twilioConversationSid])
+  @@index([leadId])
+  @@index([status])
+  @@index([channel])
+  @@index([lastMessageAt])
+  @@index([participantPhone])
+}
+
+model Message {
+  id               String                 @id @default(cuid())
+  conversationId   String
+  conversation     Conversation           @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  twilioMessageSid String?                @unique
+  direction        MessageDirection
+  body             String?                @db.Text
+  mediaUrl         String?                @db.Text
+  mediaUrls        String[]
+  author           String?
+  deliveryStatus   MessageDeliveryStatus?
+  errorCode        String?
+  errorMessage     String?                @db.Text
+  attributes       Json?
+  sentAt           DateTime               @default(now())
+  deliveredAt      DateTime?
+  failedAt         DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([twilioMessageSid])
+  @@index([direction])
+  @@index([sentAt])
+  @@index([deliveryStatus])
+}
+
+model ConsentLog {
+  id            String        @id @default(cuid())
+  leadId        String
+  lead          Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  consentType   ConsentType
+  consentGiven  Boolean       @default(true)
+  consentMethod ConsentMethod
+  consentText   String        @db.Text
+  ipAddress     String?
+  userAgent     String?       @db.Text
+  source        String?
+  consentedAt   DateTime      @default(now())
+  revokedAt     DateTime?
+  revokedReason String?
+  metadata      Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@index([consentType])
+  @@index([consentedAt])
+  @@index([revokedAt])
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { LeadIngestSchema } from "@/lib/validations/lead-ingest";
 import { routeLeadAsync } from "@/lib/lead-router";
+import { recordConsent, TCPA_DISCLOSURE_TEXT } from "@/lib/consent";
 import { randomUUID } from "crypto";
 import { timingSafeEqual } from "crypto";
 
@@ -172,6 +173,26 @@ export async function POST(req: NextRequest) {
     console.info(
       `[lead-ingest] [${correlationId}] Created lead: ${lead.id}`
     );
+
+    if (data.tcpa_consent === true) {
+      try {
+        await recordConsent({
+          leadId: lead.id,
+          consentType: "TCPA_EXPRESS_WRITTEN",
+          consentMethod: "WEB_FORM",
+          consentText: data.tcpa_consent_text ?? TCPA_DISCLOSURE_TEXT,
+          ipAddress: data.ip_address,
+          userAgent: data.user_agent,
+          source: data.source,
+          metadata: { ingestCorrelationId: correlationId },
+        });
+      } catch (consentErr) {
+        console.error(
+          `[lead-ingest] [${correlationId}] Failed to record consent`,
+          consentErr,
+        );
+      }
+    }
 
     // Fire-and-forget: classify, notify admin, text the lead, dispatch webhook.
     routeLeadAsync(lead.id);
