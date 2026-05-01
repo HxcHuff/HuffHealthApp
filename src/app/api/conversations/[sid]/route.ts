@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import {
   getConversationDetails,
   closeConversationAction,
+  markConversationRead,
 } from "@/actions/conversations";
 
 export const runtime = "nodejs";
@@ -21,6 +22,8 @@ export async function GET(
   if ("error" in result) {
     return NextResponse.json(result, { status: 404 });
   }
+  // Loading the thread means the agent has seen it — clear unread.
+  await markConversationRead(sid);
   return NextResponse.json(result);
 }
 

@@ -148,6 +148,33 @@ export async function processInboundMessage(event: InboundMessageEvent): Promise
       select: { id: true, leadId: true },
     });
     if (leadId) {
+      // Record inbound-initiated consent if the lead has no prior consent log.
+      // TCPA permits responding to a contact-initiated inquiry; outbound
+      // compliance treats INBOUND_INITIATED as valid for replies.
+      const existingConsent = await db.consentLog.findFirst({
+        where: { leadId },
+        select: { id: true },
+      });
+      if (!existingConsent) {
+        await db.consentLog.create({
+          data: {
+            leadId,
+            consentType: "INBOUND_INITIATED",
+            consentGiven: true,
+            consentMethod: "INBOUND_INITIATED",
+            consentText:
+              "Inbound message from lead initiated this conversation. Reply consent recorded under TCPA prior-business-relationship doctrine; promotional outreach still requires express written consent.",
+            source: "inbound_sms",
+          },
+        });
+        await db.leadEvent.create({
+          data: {
+            leadId,
+            type: "CONSENT_RECORDED",
+            payload: { type: "INBOUND_INITIATED", method: "inbound_sms" },
+          },
+        });
+      }
       await db.leadEvent.create({
         data: {
           leadId,
@@ -186,13 +213,14 @@ export async function processInboundMessage(event: InboundMessageEvent): Promise
     select: { id: true },
   });
 
+  // Stamp activity but don't close yet — STOP confirmation must send first
+  // (sendOutboundMessage rejects CLOSED conversations).
   await db.conversation.update({
     where: { id: conversation.id },
     data: {
       lastMessageAt: new Date(),
       lastInboundAt: new Date(),
       unreadCount: { increment: 1 },
-      ...(optOut ? { status: "CLOSED", closedAt: new Date(), closedReason: "Opt-out" } : {}),
     },
   });
 
@@ -214,8 +242,8 @@ export async function processInboundMessage(event: InboundMessageEvent): Promise
   if (optOut && leadId) {
     await recordOptOut(leadId, event.body ?? "");
     // Carriers typically auto-send the standard STOP confirmation, but we also
-    // send our own to be explicit. Wrapped in try/catch so a failure here
-    // doesn't break the inbound pipeline.
+    // send our own to be explicit. Send BEFORE closing the conversation, since
+    // sendOutboundMessage rejects CLOSED conversations.
     try {
       const { sendOutboundMessage } = await import("./outbound");
       await sendOutboundMessage({
@@ -228,6 +256,14 @@ export async function processInboundMessage(event: InboundMessageEvent): Promise
     } catch (err) {
       console.warn("[twilio-inbound] opt-out confirmation send failed", err);
     }
+    await db.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        status: "CLOSED",
+        closedAt: new Date(),
+        closedReason: "Opt-out",
+      },
+    });
   }
 
   if (optIn && leadId) {
