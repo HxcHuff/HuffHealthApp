@@ -5,6 +5,7 @@ const LEAD_SOURCES = [
   "fb_lead_ad",
   "website_form",
   "fb_traffic",
+  "google_lead_form",
   "referral",
   "bni",
   "manual",
