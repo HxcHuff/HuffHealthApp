@@ -50,7 +50,12 @@ export function classifyLead(input: ClassificationInput): ClassificationResult {
   const utm = (input.utmSource ?? "").toLowerCase().trim();
   const src = (input.source ?? "").toLowerCase().trim();
 
-  if (src === "fb_lead_ad" || src === "fb_traffic" || PAID_UTM_SOURCES.has(utm)) {
+  if (
+    src === "fb_lead_ad" ||
+    src === "fb_traffic" ||
+    src === "google_lead_form" ||
+    PAID_UTM_SOURCES.has(utm)
+  ) {
     return { sourceCategory: "PAID", priority: "HOT" };
   }
   if (REFERRAL_SOURCES.has(src) || REFERRAL_SOURCES.has(utm)) {
