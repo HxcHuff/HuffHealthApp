@@ -13,6 +13,10 @@ import {
 } from "./compliance";
 import { TwilioDryRunSkip } from "./types";
 import { maskPhone } from "./signature";
+import {
+  parseMessengerId,
+  sendFacebookMessengerMessage,
+} from "./messenger";
 
 export interface StartConversationInput {
   leadId: string;
@@ -204,12 +208,35 @@ export interface SendOutboundMessageInput {
   bypassConsentCheck?: boolean;
 }
 
+function messengerPsidFromConversation(conversation: {
+  participantPhone: string | null;
+  attributes: unknown;
+}): string | null {
+  const fromParticipant = parseMessengerId(conversation.participantPhone);
+  if (fromParticipant) return fromParticipant;
+  if (conversation.attributes && typeof conversation.attributes === "object") {
+    const attrs = conversation.attributes as Record<string, unknown>;
+    if (typeof attrs.facebookPsid === "string") {
+      return parseMessengerId(attrs.facebookPsid);
+    }
+  }
+  return null;
+}
+
 export async function sendOutboundMessage(
   input: SendOutboundMessageInput,
 ): Promise<OutboundMessageResult> {
   const conversation = await db.conversation.findUnique({
     where: { twilioConversationSid: input.conversationSid },
-    select: { id: true, twilioConversationSid: true, leadId: true, status: true },
+    select: {
+      id: true,
+      twilioConversationSid: true,
+      leadId: true,
+      status: true,
+      channel: true,
+      participantPhone: true,
+      attributes: true,
+    },
   });
   if (!conversation) {
     throw new Error(`Conversation ${input.conversationSid} not found`);
@@ -218,7 +245,9 @@ export async function sendOutboundMessage(
     throw new Error(`Conversation ${input.conversationSid} is ${conversation.status}`);
   }
 
-  if (conversation.leadId && !input.bypassConsentCheck) {
+  const isMessenger = conversation.channel === "FACEBOOK_MESSENGER";
+
+  if (conversation.leadId && !input.bypassConsentCheck && !isMessenger) {
     const ctx: ComplianceContext = {
       leadId: conversation.leadId,
       isReplyToInbound: input.isReplyToInbound,
@@ -228,21 +257,41 @@ export async function sendOutboundMessage(
     if (!compliance.ok) throw new ConsentRequiredError(compliance.reasons);
   }
 
-  const dryRun = isDryRun() || !isTwilioConfigured();
   let twilioMessageSid: string | null = null;
+  let dryRun = false;
 
-  if (!dryRun) {
-    const env = readTwilioEnv();
-    const sent = await twilioSendMessage({
-      conversationSid: input.conversationSid,
+  if (isMessenger) {
+    const psid = messengerPsidFromConversation(conversation);
+    if (!psid) {
+      throw new Error(
+        "Messenger thread has no Facebook PSID. Refusing to fall back to SMS.",
+      );
+    }
+    const statusCallbackUrl = process.env.TWILIO_WEBHOOK_BASE_URL
+      ? `${process.env.TWILIO_WEBHOOK_BASE_URL.replace(/\/$/, "")}/api/twilio/messenger/status-callback`
+      : undefined;
+    const sent = await sendFacebookMessengerMessage({
+      toPsid: psid,
       body: input.body,
-      author: input.author ?? env?.phoneNumber,
+      statusCallbackUrl,
     });
     twilioMessageSid = sent.sid;
+    dryRun = false;
   } else {
-    console.info(
-      `[twilio-outbound] DRY_RUN sendMessage conv=${input.conversationSid} bodyLen=${input.body.length}`,
-    );
+    dryRun = isDryRun() || !isTwilioConfigured();
+    if (!dryRun) {
+      const env = readTwilioEnv();
+      const sent = await twilioSendMessage({
+        conversationSid: input.conversationSid,
+        body: input.body,
+        author: input.author ?? env?.phoneNumber,
+      });
+      twilioMessageSid = sent.sid;
+    } else {
+      console.info(
+        `[twilio-outbound] DRY_RUN sendMessage conv=${input.conversationSid} bodyLen=${input.body.length}`,
+      );
+    }
   }
 
   const message = await recordOutboundMessage({
@@ -272,6 +321,7 @@ export async function sendOutboundMessage(
           messageId: message.id,
           conversationSid: input.conversationSid,
           dryRun,
+          channel: isMessenger ? "facebook_messenger" : "sms",
         },
       },
     });
@@ -292,11 +342,15 @@ export async function closeConversation(
 ): Promise<void> {
   const conversation = await db.conversation.findUnique({
     where: { twilioConversationSid: conversationSid },
-    select: { id: true, status: true },
+    select: { id: true, status: true, channel: true },
   });
   if (!conversation) throw new Error(`Conversation ${conversationSid} not found`);
 
-  if (!isDryRun() && isTwilioConfigured()) {
+  if (
+    conversation.channel !== "FACEBOOK_MESSENGER" &&
+    !isDryRun() &&
+    isTwilioConfigured()
+  ) {
     try {
       await updateConversationState(conversationSid, "closed");
     } catch (err) {

@@ -1,4 +1,4 @@
-export type ConversationChannel = "sms" | "whatsapp" | "webchat";
+export type ConversationChannel = "sms" | "whatsapp" | "webchat" | "facebook_messenger";
 export type ConversationStatus = "active" | "closed" | "archived";
 export type MessageDirection = "inbound" | "outbound";
 export type MessageDeliveryStatus =

@@ -6,6 +6,7 @@ import {
 import { validateTwilioSignature } from "@/lib/twilio/signature";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { validateTwilioEnv } from "@/lib/twilio/env-validation";
+import { detectChannelFromAddress } from "@/lib/twilio/messenger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
           if (author && phoneNumber && author === phoneNumber) {
             return; // outbound echo — already recorded by sendMessage
           }
+          const channel = detectChannelFromAddress(author);
           await processInboundMessage({
             conversationSid,
             messageSid,
@@ -121,7 +123,7 @@ export async function POST(req: NextRequest) {
             body: body.Body ?? null,
             mediaUrls: parseMediaUrls(body),
             participantPhone: author,
-            channel: author?.startsWith("whatsapp:") ? "whatsapp" : "sms",
+            channel,
           });
           break;
         }
