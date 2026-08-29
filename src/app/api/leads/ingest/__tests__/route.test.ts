@@ -18,8 +18,19 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("@/lib/lead-router", () => ({
+  routeLeadAsync: vi.fn(),
+}));
+
+vi.mock("@/lib/consent", () => ({
+  recordConsent: vi.fn().mockResolvedValue({ id: "consent-id" }),
+  TCPA_DISCLOSURE_TEXT: "TCPA disclosure",
+}));
+
 import { POST } from "../route";
 import { db } from "@/lib/db";
+import { routeLeadAsync } from "@/lib/lead-router";
+import { recordConsent } from "@/lib/consent";
 import { NextRequest } from "next/server";
 
 const VALID_SECRET = "test-ingest-secret-1234";
@@ -86,6 +97,8 @@ describe("POST /api/leads/ingest", () => {
     expect(createCall.data.phone).toBe("+18635551234"); // normalized E.164
     expect(createCall.data.firstName).toBe("Jane");
     expect(createCall.data.status).toBe("NEW_LEAD");
+    expect(routeLeadAsync).toHaveBeenCalledWith("new-lead-id");
+    expect(recordConsent).toHaveBeenCalledOnce();
   });
 
   it("returns 401 when no auth header is provided", async () => {
@@ -116,6 +129,7 @@ describe("POST /api/leads/ingest", () => {
     expect(json.leadId).toBe("existing-lead-id");
     expect(json.duplicate).toBe(true);
     expect(db.$transaction).toHaveBeenCalledOnce();
+    expect(routeLeadAsync).not.toHaveBeenCalled();
   });
 
   it("returns 400 for an invalid phone number", async () => {
@@ -129,15 +143,20 @@ describe("POST /api/leads/ingest", () => {
     expect(json.fields.phone).toBeDefined();
   });
 
-  it("returns 400 when tcpa_consent is false", async () => {
+  it("creates a lead when tcpa_consent is false and does not record consent", async () => {
     const res = await POST(
       makeRequest(validPayload({ tcpa_consent: false }), VALID_SECRET)
     );
     const json = await res.json();
 
-    expect(res.status).toBe(400);
-    expect(json.error).toBe("Validation failed");
-    expect(json.fields.tcpa_consent).toBeDefined();
+    expect(res.status).toBe(201);
+    expect(json.leadId).toBe("new-lead-id");
+    expect(json.duplicate).toBe(false);
+    expect(recordConsent).not.toHaveBeenCalled();
+    expect(routeLeadAsync).toHaveBeenCalledWith("new-lead-id");
+    const createCall = (db.lead.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(createCall.data.tcpaConsent).toBe(false);
   });
 
   it("returns 400 when tcpa_consent is missing", async () => {

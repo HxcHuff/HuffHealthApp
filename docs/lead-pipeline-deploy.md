@@ -8,13 +8,21 @@ pipeline. Follow in order. Every section is gated by the previous one.
 ## 0. What this pipeline does
 
 ```
-Public form  ─►  POST /api/leads/ingest  ─►  Lead row + LeadEvent(CREATED)
-                                              │
-                                              ├─►  classifyLead() ── PAID? → priority=HOT
-                                              ├─►  Twilio SMS to ADMIN_NOTIFY_PHONE
-                                              ├─►  Twilio SMS to lead (LOB-templated)
-                                              └─►  POST LEAD_ROUTER_WEBHOOK_URL
+Public form / Facebook / Google
+        ─►  create/dedupe Lead
+        ─►  (new lead only) routeLead()
+              ├─►  classifyLead()
+              ├─►  first-touch EMAIL (Resend) — needs address, not suppressed
+              ├─►  first-touch SMS (Twilio) — needs documented TCPA consent
+              ├─►  admin alert SMS
+              └─►  optional webhook
 ```
+
+Live email and SMS are **fail-closed**. They do not send unless
+`OUTBOUND_NOTIFICATIONS_ENABLED=true` and `LEAD_PIPELINE_DRY_RUN` is not `"true"`.
+Google Ads, LeadConnect, and purchased sources never get SMS unless a real
+ConsentLog (`TCPA_EXPRESS_WRITTEN`) exists. Duplicates update `lastTouchAt` and
+do **not** re-send first-touch.
 
 The router runs **fire-and-forget** after the ingest response, so the public
 endpoint stays fast and Twilio outages cannot block lead capture.
@@ -75,9 +83,12 @@ Add these to Netlify (Site → Environment variables) for each environment:
 | Variable | Required? | Notes |
 |---|---|---|
 | `LEAD_INGEST_SECRET` | yes | Already exists. Bearer token for the ingest endpoint. |
-| `LEAD_PIPELINE_DRY_RUN` | dev/staging | `"true"` to skip real Twilio sends. **Unset or `"false"` in prod.** |
+| `OUTBOUND_NOTIFICATIONS_ENABLED` | yes | **Fail-closed.** Live email/SMS only when exactly `"true"`. Leave `"false"` until a dedicated Twilio from-number is ready. |
+| `LEAD_PIPELINE_DRY_RUN` | recommended | `"true"` to skip real Twilio/Resend sends even if outbound is enabled. |
 | `ADMIN_NOTIFY_PHONE` | yes (prod) | E.164. Receives the instant new-lead alert. |
-| `AGENT_DISPLAY_NAME` | recommended | Shown in the speed-to-lead SMS (e.g. `David at HuffHealth`). |
+| `AGENT_DISPLAY_NAME` | recommended | Shown in first-touch copy (default `David Huff`). |
+| `AGENT_BUSINESS_NAME` | recommended | Default `Lakeland Health Insurance`. |
+| `AGENT_CONTACT_PHONE` | recommended | Office callback printed in copy (default `863-640-3102`). Not the Twilio sender. |
 | `LEAD_ROUTER_WEBHOOK_URL` | optional | Posts a classified-lead JSON. Use for Zapier, Make, or a downstream CRM mirror. |
 | `LEAD_ROUTER_WEBHOOK_SECRET` | optional | Sent as `x-webhook-secret`. Verify it on the receiver. |
 | `TWILIO_ACCOUNT_SID` | yes (prod) | From step 1. |
@@ -127,8 +138,11 @@ FROM "LeadEvent" WHERE "leadId" = '<the lead id>' ORDER BY "createdAt";
 1. Merge to `main`. Netlify deploy will run `prisma migrate deploy` per the
    existing build pipeline.
 2. Confirm env vars in Netlify Production:
-   - `LEAD_PIPELINE_DRY_RUN` is **unset** or `"false"`.
-   - `TWILIO_*` and `ADMIN_NOTIFY_PHONE` are populated.
+   - `OUTBOUND_NOTIFICATIONS_ENABLED` is still `"false"` until a dedicated
+     Twilio business sender (`TWILIO_FROM_NUMBER`) is ready. Do not reuse a
+     personal/family number.
+   - `LEAD_PIPELINE_DRY_RUN` is `"true"` until the first live test.
+   - `TWILIO_*`, `RESEND_API_KEY`, and `ADMIN_NOTIFY_PHONE` are populated.
 3. Send a single live test:
    ```bash
    SIMULATE_BASE_URL=https://YOUR-DOMAIN \
@@ -204,7 +218,10 @@ recreating the enum, so leave them in place — they're inert if unused.
 | `src/app/api/leads/route.ts` | Authenticated list endpoint with status / priority / sourceCategory filters and cursor pagination. |
 | `src/app/api/leads/[id]/route.ts` | Authenticated GET (with events) and PATCH for status/priority/assignment. |
 | `src/lib/lead-router.ts` | `classifyLead()` + `routeLead()` + `routeLeadAsync()`. |
-| `src/lib/sms.ts` | Twilio sender. Honors `LEAD_PIPELINE_DRY_RUN`. |
-| `src/lib/sms-templates.ts` | LOB-aware speed-to-lead templates + admin alert template. |
+| `src/lib/new-lead-notify.ts` | First-touch email + SMS with consent and kill-switch gates. |
+| `src/lib/first-touch.ts` | Previewable first-touch copy. |
+| `src/lib/outbound.ts` | Fail-closed live-send gate. |
+| `src/lib/sms.ts` | Twilio sender. Honors outbound enable + dry-run. |
+| `src/lib/sms-templates.ts` | LOB-aware Conversations templates + admin alert template. |
 | `prisma/migrations/20260501120000_add_lead_router_fields/` | Schema migration. |
 | `scripts/simulate-lead.ts` | DRY_RUN harness. Four scenarios: aca, medicare, fb-ad, organic. |

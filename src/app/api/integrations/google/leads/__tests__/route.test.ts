@@ -18,6 +18,7 @@ vi.mock("@/lib/consent", () => ({
   TCPA_DISCLOSURE_TEXT: "TCPA disclosure",
 }));
 
+
 import { POST } from "../route";
 import { db } from "@/lib/db";
 import { routeLeadAsync } from "@/lib/lead-router";
@@ -81,10 +82,10 @@ describe("POST /api/integrations/google/leads", () => {
     expect(createCall.data.utmSource).toBe("google");
     expect(createCall.data.campaign).toBe("67890");
     expect(createCall.data.externalLeadId).toBe("g-lead-abc");
-    expect(createCall.data.tcpaConsent).toBe(true);
+    expect(createCall.data.tcpaConsent).toBe(false);
 
     expect(routeLeadAsync).toHaveBeenCalledWith("new-lead-id");
-    expect(recordConsent).toHaveBeenCalledOnce();
+    expect(recordConsent).not.toHaveBeenCalled();
   });
 
   it("prefers FIRST_NAME / LAST_NAME columns over FULL_NAME", async () => {

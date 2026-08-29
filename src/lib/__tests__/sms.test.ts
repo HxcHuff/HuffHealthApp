@@ -13,7 +13,23 @@ describe("sendSms", () => {
     vi.unstubAllEnvs();
   });
 
+  it("returns skipped_outbound_disabled unless OUTBOUND_NOTIFICATIONS_ENABLED is true", async () => {
+    vi.stubEnv("OUTBOUND_NOTIFICATIONS_ENABLED", "");
+    vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "");
+    vi.stubEnv("TWILIO_ACCOUNT_SID", "AC-real");
+    vi.stubEnv("TWILIO_AUTH_TOKEN", "real-token");
+    vi.stubEnv("TWILIO_FROM_NUMBER", "+15555550000");
+
+    const fetchSpy = vi.fn();
+    globalThis.fetch = fetchSpy as typeof fetch;
+
+    const res = await sendSms({ to: "+18635551234", body: "hi" });
+    expect(res.status).toBe("skipped_outbound_disabled");
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("returns skipped_dry_run when LEAD_PIPELINE_DRY_RUN is true", async () => {
+    vi.stubEnv("OUTBOUND_NOTIFICATIONS_ENABLED", "true");
     vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "true");
     vi.stubEnv("TWILIO_ACCOUNT_SID", "AC-real");
     vi.stubEnv("TWILIO_AUTH_TOKEN", "real-token");
@@ -28,6 +44,7 @@ describe("sendSms", () => {
   });
 
   it("returns skipped_no_credentials when env is missing", async () => {
+    vi.stubEnv("OUTBOUND_NOTIFICATIONS_ENABLED", "true");
     vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "");
     vi.stubEnv("TWILIO_ACCOUNT_SID", "");
     vi.stubEnv("TWILIO_AUTH_TOKEN", "");
@@ -39,6 +56,7 @@ describe("sendSms", () => {
   });
 
   it("uses MessagingServiceSid when TWILIO_MESSAGING_SERVICE_SID is set", async () => {
+    vi.stubEnv("OUTBOUND_NOTIFICATIONS_ENABLED", "true");
     vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "");
     vi.stubEnv("TWILIO_ACCOUNT_SID", "ACtest");
     vi.stubEnv("TWILIO_AUTH_TOKEN", "secret");
@@ -60,6 +78,7 @@ describe("sendSms", () => {
   });
 
   it("posts to Twilio when fully configured", async () => {
+    vi.stubEnv("OUTBOUND_NOTIFICATIONS_ENABLED", "true");
     vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "");
     vi.stubEnv("TWILIO_ACCOUNT_SID", "ACtest");
     vi.stubEnv("TWILIO_AUTH_TOKEN", "secret");
@@ -86,6 +105,7 @@ describe("sendSms", () => {
   });
 
   it("returns failed on Twilio error", async () => {
+    vi.stubEnv("OUTBOUND_NOTIFICATIONS_ENABLED", "true");
     vi.stubEnv("LEAD_PIPELINE_DRY_RUN", "");
     vi.stubEnv("TWILIO_ACCOUNT_SID", "ACtest");
     vi.stubEnv("TWILIO_AUTH_TOKEN", "secret");

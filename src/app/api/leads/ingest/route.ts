@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         utmContent: data.utm_content,
         tcpaConsent: data.tcpa_consent,
         tcpaConsentText: data.tcpa_consent_text,
-        tcpaTimestamp: new Date(data.tcpa_timestamp),
+        tcpaTimestamp: data.tcpa_timestamp ? new Date(data.tcpa_timestamp) : null,
         ipAddress: data.ip_address,
         userAgent: data.user_agent,
         status: "NEW_LEAD",
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fire-and-forget: classify, notify admin, text the lead, dispatch webhook.
+    // Fire-and-forget: classify, first-touch email+SMS (gated), admin alert, webhook.
     routeLeadAsync(lead.id);
 
     return NextResponse.json(

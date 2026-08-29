@@ -4,7 +4,6 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { randomUUID, timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { routeLeadAsync } from "@/lib/lead-router";
-import { recordConsent, TCPA_DISCLOSURE_TEXT } from "@/lib/consent";
 
 const GoogleColumnSchema = z.object({
   column_id: z.string().optional(),
@@ -226,9 +225,8 @@ export async function POST(req: NextRequest) {
         utmSource: "google",
         utmCampaign: data.campaign,
         externalLeadId: payload.lead_id,
-        tcpaConsent: true,
-        tcpaConsentText: TCPA_DISCLOSURE_TEXT,
-        tcpaTimestamp: new Date(),
+        // Google Ads lead forms do not document SMS consent. Do not invent it.
+        tcpaConsent: false,
         status: "NEW_LEAD",
         lastTouchAt: new Date(),
         createdById: systemUserId,
@@ -249,24 +247,6 @@ export async function POST(req: NextRequest) {
     });
 
     console.info(`[google-leads] [${correlationId}] Created lead: ${lead.id}`);
-
-    try {
-      await recordConsent({
-        leadId: lead.id,
-        consentType: "TCPA_EXPRESS_WRITTEN",
-        consentMethod: "WEB_FORM",
-        consentText: TCPA_DISCLOSURE_TEXT,
-        source: "google_lead_form",
-        metadata: {
-          googleLeadId: payload.lead_id,
-          formId: formId ?? null,
-          campaignId: data.campaign ?? null,
-          ingestCorrelationId: correlationId,
-        },
-      });
-    } catch (consentErr) {
-      console.error(`[google-leads] [${correlationId}] Failed to record consent`, consentErr);
-    }
 
     routeLeadAsync(lead.id);
 

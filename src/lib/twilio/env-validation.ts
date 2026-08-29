@@ -34,6 +34,11 @@ export function validateTwilioEnv(): {
   if (process.env.LEAD_PIPELINE_DRY_RUN === "true") {
     warnings.push("LEAD_PIPELINE_DRY_RUN=true — Twilio sends are simulated only");
   }
+  if (process.env.OUTBOUND_NOTIFICATIONS_ENABLED !== "true") {
+    warnings.push(
+      "OUTBOUND_NOTIFICATIONS_ENABLED is not true — live email/SMS are fail-closed",
+    );
+  }
 
   if (missing.length > 0) {
     console.warn(`[twilio-env] missing required vars: ${missing.join(", ")}`);
