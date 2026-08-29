@@ -1,5 +1,12 @@
 [build]
-  command = "npx prisma db push --url \"$NETLIFY_DATABASE_URL_UNPOOLED\" && npx prisma generate && npm run build"
+  # Do not prisma db push on deploy. Live Neon has Hopper tables plus extra
+  # ones (AiBudget, AiUsage, LeadScore, ConversationSummary,
+  # PlanRecommendation, compliance_audit_log) that are not in schema.prisma.
+  # db push treats those as drift, warns about data loss, and exits 2 in CI.
+  # There is also no _prisma_migrations table, so migrate deploy would try
+  # to replay history onto existing tables. Schema for Hopper models already
+  # matches. Apply additive SQL separately; never --accept-data-loss here.
+  command = "npx prisma generate && npm run build"
   publish = ".next"
   ignore = "bash ./scripts/netlify-ignore-unapproved.sh"
 
