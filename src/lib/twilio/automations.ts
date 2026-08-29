@@ -127,13 +127,16 @@ export async function onNewLead(leadId: string): Promise<AutomationResult> {
   if (isMedicareLead(lead)) {
     return { triggered: false, reason: "medicare_lead_no_outbound" };
   }
+  const source = (lead.source ?? "").toLowerCase();
+  if (source.includes("facebook_messenger") || source === "messenger") {
+    return { triggered: false, reason: "messenger_channel_no_sms" };
+  }
   if (!(await withinDailyLimit(leadId))) {
     return { triggered: false, reason: "daily_limit_exceeded" };
   }
 
   const first = lead.firstName;
   const cityOrCounty = lead.city ?? "Polk County";
-  const source = (lead.source ?? "").toLowerCase();
 
   let template: string | null = null;
   if (source.includes("facebook") || source.includes("meta")) {
