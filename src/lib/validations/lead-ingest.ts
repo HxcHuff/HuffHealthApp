@@ -6,6 +6,8 @@ const LEAD_SOURCES = [
   "website_form",
   "fb_traffic",
   "google_lead_form",
+  "leadconnect",
+  "purchased",
   "referral",
   "bni",
   "manual",
@@ -39,16 +41,31 @@ export const LeadIngestSchema = z.object({
   household_size: z.number().int().positive("Must be a positive integer").optional(),
   estimated_income: z.number().positive("Must be a positive number").optional(),
   qualifying_event: z.string().optional(),
-  tcpa_consent: z.literal(true, {
-    message: "TCPA consent must be true",
-  }),
-  tcpa_consent_text: z.string().min(1, "TCPA consent text is required"),
-  tcpa_timestamp: z.string().datetime("Must be a valid ISO 8601 datetime"),
+  tcpa_consent: z.boolean(),
+  tcpa_consent_text: z.string().optional(),
+  tcpa_timestamp: z.string().datetime("Must be a valid ISO 8601 datetime").optional(),
   utm_source: z.string().optional(),
   utm_campaign: z.string().optional(),
   utm_content: z.string().optional(),
   ip_address: z.string().optional(),
   user_agent: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.tcpa_consent) {
+    if (!data.tcpa_consent_text?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["tcpa_consent_text"],
+        message: "TCPA consent text is required when consent is true",
+      });
+    }
+    if (!data.tcpa_timestamp) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["tcpa_timestamp"],
+        message: "TCPA timestamp is required when consent is true",
+      });
+    }
+  }
 });
 
 export type LeadIngestInput = z.infer<typeof LeadIngestSchema>;

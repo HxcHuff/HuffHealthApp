@@ -1,10 +1,7 @@
 import { db } from "@/lib/db";
 import { sendSms } from "@/lib/sms";
-import {
-  renderSpeedToLeadSms,
-  renderAdminAlertSms,
-  type SpeedToLeadContext,
-} from "@/lib/sms-templates";
+import { renderAdminAlertSms } from "@/lib/sms-templates";
+import { notifyNewLead, wasSmsAttempted } from "@/lib/new-lead-notify";
 import type { Lead, LeadPriority, LeadSourceCategory } from "@/generated/prisma/client";
 
 export interface ClassificationInput {
@@ -85,6 +82,7 @@ export interface RouteResult {
   leadId: string;
   classification: ClassificationResult;
   speedToLead: { status: string; sid?: string };
+  firstTouchEmail: { status: string };
   adminAlert: { status: string; sid?: string };
   webhook: { status: "ok" | "skipped" | "failed"; httpStatus?: number; error?: string };
 }
@@ -119,8 +117,9 @@ async function postWebhook(
  * Run the full router for a freshly-created lead. Idempotent on routedAt —
  * a lead already routed will be skipped on retry.
  *
- * Side effects: updates Lead with classification, fires admin SMS, fires
- * speed-to-lead SMS to the lead, POSTs to webhook, writes LeadEvent rows.
+ * Side effects: updates Lead with classification, fires first-touch email + SMS
+ * (consent + outbound kill switch), fires admin SMS, POSTs to webhook, writes
+ * LeadEvent rows.
  */
 export async function routeLead(leadId: string, opts: RouteOptions = {}): Promise<RouteResult> {
   const lead = await db.lead.findUniqueOrThrow({ where: { id: leadId } });
@@ -133,6 +132,7 @@ export async function routeLead(leadId: string, opts: RouteOptions = {}): Promis
         priority: lead.priority,
       },
       speedToLead: { status: "skipped_already_routed" },
+      firstTouchEmail: { status: "skipped_already_routed" },
       adminAlert: { status: "skipped_already_routed" },
       webhook: { status: "skipped" },
     };
@@ -150,16 +150,9 @@ export async function routeLead(leadId: string, opts: RouteOptions = {}): Promis
   const webhookUrl = opts.webhookUrl ?? process.env.LEAD_ROUTER_WEBHOOK_URL ?? "";
   const webhookSecret = opts.webhookSecret ?? process.env.LEAD_ROUTER_WEBHOOK_SECRET;
 
-  const stlCtx: SpeedToLeadContext = {
-    firstName: lead.firstName,
-    agentName: opts.agentName ?? process.env.AGENT_DISPLAY_NAME,
-    insuranceType: lead.insuranceType,
-    qualifyingEvent: lead.qualifyingEvent,
-  };
-
-  const speedToLeadResult = lead.phone && lead.tcpaConsent
-    ? await sendSms({ to: lead.phone, body: renderSpeedToLeadSms(stlCtx) })
-    : { status: "skipped_no_consent" as const };
+  const firstTouch = await notifyNewLead(leadId);
+  const speedToLeadResult = firstTouch.sms;
+  const firstTouchEmail = firstTouch.email;
 
   const adminAlertResult = adminPhone
     ? await sendSms({
@@ -209,11 +202,7 @@ export async function routeLead(leadId: string, opts: RouteOptions = {}): Promis
         priority: classification.priority,
         sourceCategory: classification.sourceCategory,
         routedAt: now,
-        speedToLeadAt:
-          speedToLeadResult.status === "sent" ||
-          speedToLeadResult.status === "skipped_dry_run"
-            ? now
-            : undefined,
+        speedToLeadAt: wasSmsAttempted(speedToLeadResult.status) ? now : undefined,
       },
     }),
     db.leadEvent.create({
@@ -239,8 +228,19 @@ export async function routeLead(leadId: string, opts: RouteOptions = {}): Promis
         type: "SMS_SENT",
         payload: {
           to: "lead",
-          template: stlCtx.insuranceType ?? "GENERIC",
+          template: "FIRST_TOUCH",
           ...speedToLeadResult,
+        },
+      },
+    }),
+    db.leadEvent.create({
+      data: {
+        leadId,
+        type: "EMAIL_SENT",
+        payload: {
+          to: "lead",
+          template: "FIRST_TOUCH",
+          ...firstTouchEmail,
         },
       },
     }),
@@ -257,6 +257,7 @@ export async function routeLead(leadId: string, opts: RouteOptions = {}): Promis
     leadId,
     classification,
     speedToLead: speedToLeadResult,
+    firstTouchEmail,
     adminAlert: adminAlertResult,
     webhook: webhookResult,
   };

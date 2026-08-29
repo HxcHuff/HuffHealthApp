@@ -12,7 +12,11 @@ export interface TwilioEnv {
 let cached: Twilio | null = null;
 
 export function isDryRun(): boolean {
-  return process.env.LEAD_PIPELINE_DRY_RUN === "true";
+  // Fail closed: live Twilio requires an explicit outbound enable AND dry-run off.
+  return (
+    process.env.LEAD_PIPELINE_DRY_RUN === "true" ||
+    process.env.OUTBOUND_NOTIFICATIONS_ENABLED !== "true"
+  );
 }
 
 export function readTwilioEnv(): TwilioEnv | null {

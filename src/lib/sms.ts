@@ -1,22 +1,26 @@
+import { getOutboundSkipReason } from "@/lib/outbound";
+
 export interface SendSmsOptions {
   to: string;
   body: string;
 }
 
 export interface SendSmsResult {
-  status: "sent" | "skipped_dry_run" | "skipped_no_credentials" | "failed";
+  status:
+    | "sent"
+    | "skipped_outbound_disabled"
+    | "skipped_dry_run"
+    | "skipped_no_credentials"
+    | "failed";
   sid?: string;
   error?: string;
 }
 
-function isDryRun(): boolean {
-  return process.env.LEAD_PIPELINE_DRY_RUN === "true";
-}
-
 export async function sendSms({ to, body }: SendSmsOptions): Promise<SendSmsResult> {
-  if (isDryRun()) {
-    console.info(`[sms] DRY_RUN to=${to} body=${JSON.stringify(body)}`);
-    return { status: "skipped_dry_run" };
+  const skip = getOutboundSkipReason();
+  if (skip) {
+    console.info(`[sms] ${skip} to=${to} body=${JSON.stringify(body)}`);
+    return { status: skip };
   }
 
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
