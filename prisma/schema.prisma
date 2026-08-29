@@ -92,6 +92,7 @@ enum ConversationChannel {
   SMS
   WHATSAPP
   WEBCHAT
+  FACEBOOK_MESSENGER
 }
 
 enum ConversationStatus {
@@ -451,7 +452,7 @@ model Task {
   id          String         @id @default(cuid())
   title       String
   description String?        @db.Text
-  dueDate     DateTime?
+  dueDate      DateTime?
   isCompleted Boolean        @default(false)
   completedAt DateTime?
   priority    TicketPriority @default(MEDIUM)
