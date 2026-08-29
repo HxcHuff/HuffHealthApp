@@ -1,4 +1,4 @@
-const DEFAULT_APP_NAME = "HuffHealth";
+const DEFAULT_APP_NAME = "Hopper";
 const DEFAULT_APP_TAGLINE = "CRM & Client Portal";
 
 export function getAppName() {
